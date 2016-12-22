@@ -222,13 +222,13 @@ def print_sentence_alignment_2(fr_corpus,en_corpus,en_dict,fr_dict,P,idx,figure=
 	en_indices = []
 
 	for word in en_sentence:
-		en_idx = hash(en_dict,word)
+		en_idx = hash(fr_dict,word)
 		en_indices.append(en_idx)
 
 	tmp_P = P[:,en_indices[0]]
 
 	for k in range(1,len(en_indices)):
-		tmp_P = np.hstack((tmp_P,P[:,en_indices[k]]))
+		tmp_P = np.hstack((tmp_P,P[en_indices[k],:]))
 
 	alignment = []
 	# get the most likely alignment
@@ -241,7 +241,7 @@ def print_sentence_alignment_2(fr_corpus,en_corpus,en_dict,fr_dict,P,idx,figure=
 
 	ax.plot(range(len(fr_sentence)),alignment,'ro',ls='--')
 	ax.grid(True)
-	plt.xlim((-0.5,len(fr_sentence)-0.5))
+	plt.xlim((-0.5,len(en_sentence)-0.5))
 	plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
 	plt.ylim((-0.5,len(en_sentence)-0.5))
 	plt.yticks(range(len(en_sentence)), en_sentence)
@@ -280,7 +280,7 @@ def main():
 			print_P_to_csv(en_dict, fr_dict, P, "output_ibm1.csv")
 			
 			for k in range(n_sentences):
-				print_sentence_alignment_2(fr_corpus,en_corpus,en_dict,fr_dict,P,int(math.floor(random.random()*len(fr_corpus))))
+				print_sentence_alignment2(fr_corpus,en_corpus,en_dict,fr_dict,P,int(math.floor(random.random()*len(fr_corpus))))
 	
 			plt.show()
 if __name__ == '__main__':
