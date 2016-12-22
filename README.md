@@ -1,2 +1,2 @@
-# pgm
-pgm school projects
+# Probabilistic Graphical Models
+Homework and Class Project Repo
