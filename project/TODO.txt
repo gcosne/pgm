@@ -1,0 +1,1 @@
+plot different algnment methods on the same plot
