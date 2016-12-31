@@ -202,6 +202,7 @@ def main():
     _, mu_vector_gm, sigmas_gm, pi_vector_gm, _ =  GM.EM_algo(tr_data,n_clusters)
 
     A, mus, sigmas, pi, l_tr, l_test = HMM.EM_HMM_likelihood(tr_data,test_data,n_clusters,mu_vector_gm,sigmas_gm)
+    # EM_HMM_likelihood initialized with the outputs from GM
     r_tr = HMM.update_r(tr_data,sigmas,mus,A,pi)
     p_tr = HMM.update_pi0(r_tr)
     r_test = HMM.update_r(test_data,sigmas,mus,A,pi)
