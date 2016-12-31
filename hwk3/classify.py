@@ -173,7 +173,7 @@ def viterbi(data, sigmas, mus, A, p, K, plot):
 
 def main():
     # plot setttings
-    supported_questions = np.array([2,4,5,6,8,9,10,11])
+    supported_questions = np.array([2,4,5,6,8,9,10])
 
     args = parseArguments()
     if args.q is None:
@@ -288,7 +288,7 @@ def main():
             # Plot the most likely state according to marginal probability
             axarr[0].set_title("State using marginal probability")
             axarr[0].set_ylabel("State")
-            width = 1/1.5
+            width = 1
             x = np.arange(100)
             axarr[0].bar(x[state_10==0], state_10[state_10==0]+1, width, color='r', label="q_t = 0")
             axarr[0].bar(x[state_10==1], state_10[state_10==1], width, color='b', label="q_t = 1")
