@@ -1,27 +1,37 @@
-#### all hmm functions
-#### all hmm functions
 import numpy as np
 import import_corpus as imp
+
+
+############################
+####### EXPECTATION ########
+############################
+
+#########################################################################################
+########### be careful the fr_sentence and en_sentence are assumed to be splitted already
+#########################################################################################
 
 def log_proba_translate(fr_word,en_word,fr_dict,en_dict,P):
 	return math.log(P[imp.hash(fr_dict,fr_word),imp.hash(en_dict,en_word)])
 	# P is a sparse matrix, but in this method, only non-zero cells should have a contribution
 
 def alpha_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
+# need to keep track of j, index in the french sentence chain
 # A is the transition matrix and it features 3 dimensions. The first dimension is the length of the English word
 	I = len(en_sentence)
 	result = np.zeros(I)
 	for i in range(I):
-		tmp_vector = np.log(A[i,:]) + previous_alpha #log of previous alpha
+		tmp_vector = np.log(A[I,i,:]) + previous_alpha #log of previous alpha
 		result[i] = log_sum(tmp_vector)
-		result[i] += log_proba_translate(fr_sentence[j],en_sentence[i],fr_dict,en_dict)
+		result[i] += log_proba_translate(fr_sentence[j],en_sentence[i],fr_dict,en_dict,update_P)
 	return result
 
 def beta_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,next_beta):
+# need to keep track of j, index in the french sentence chain
+# A is the transition matrix and it features 3 dimensions. The first dimension is the length of the English word
 	I = len(en_sentence)
 	result = np.zeros(I)
 	for i in range(I):
-		tmp_vector = np.log(A[:,i]) + next_beta
+		tmp_vector = np.log(A[I,:,i]) + next_beta
 		for j in range(len(next_beta)):
 			tmp_vector[j] += log_proba_translate(fr_sentence[j],en_sentence[i],fr_dict,en_dict,P)
 		result[i] = log_sum(tmp_vector)
@@ -59,8 +69,6 @@ def compute_all_beta(fr_sentence,en_sentence,fr_dict,en_dict,A,P):
 	#betas = np.exp(betas)
 	return betas
 
-# could do remapping of P
-
 def cond_proba_unary(log_alphas, log_betas):
 	probas = log_alphas + log_betas
 	for t in range(probas.shape[1]):
@@ -69,16 +77,41 @@ def cond_proba_unary(log_alphas, log_betas):
 	return probas
 
 def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_dict, en_dict):
-	probas = np.zeros([log_alphas.shape[1]-1,A.shape[0],A.shape[1]])
+	I = len(en_sentence)
+	probas = np.zeros([log_alphas.shape[1]-1,A[I].shape[0],A[I].shape[1]])
 	for t in range(probas.shape[0]):
 		for i in range(probas.shape[1]):
 			for j in range(probas.shape[2]):
 				probas[t,i,j] += log_alphas[j,t] + log_betas[i,t+1]
-				probas[t,i,j] += math.log(A[i,j])
+				probas[t,i,j] += math.log(A[I,i,j])
 				probas[t,i,j] += log_proba_translate(fr_sentence[i],en_sentence[j],fr_dict,en_dict,P)
 				probas[t,i,j] -= log_sum(log_alphas[:,t] + log_betas[:,t])
 	probas = np.exp(probas)
 	return probas
+
+def update_gamma_ksi(fr_sentence, en_sentence, fr_dict, en_dict,A,P,p_initial):
+    alphas = compute_all_alpha(fr_sentence,en_sentence,fr_dict,en_dict,A,P,p_initial)
+    betas = compute_all_beta(fr_sentence,en_sentence,fr_dict,en_dict,A,P)
+    gamma = cond_proba_unary(alphas,betas)
+    ksi = cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_dict, en_dict)
+    return gamma.T, ksi
+
+## update all alignment probabilities
+## and compile them in arrays gamma and ksi
+def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
+	n_sentences = len(fr_corpus)
+	gamma = np.zeros(n_sentences,dtype=object)
+	ksi = np.zeros(n_sentences,dtype=object)
+
+	for t in range(n_sentences):
+		fr_sentence = imp.split_sentence(fr_corpus[t])
+		en_sentence = imp.split_sentence(en_corpus[t])
+
+		gam, ks = update_gamma_ksi(fr_sentence, en_sentence, fr_dict, en_dict,A,P,p_initial)
+		gamma[t] = gam
+		ksi[t] = ks
+
+	return gamma, ksi
 
 #### maximization step ####
 
