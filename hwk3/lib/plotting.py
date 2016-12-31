@@ -56,11 +56,8 @@ _legend_size = 10
 #         plot.plot(points[:,0],points[:,1],color=next(colors))
 
 
-def plot_labeled_data(title,points,labels,cluster_centers,plot = plt, col = []):
-    if (plot != plt):
-        plot.set_title(title)
-    else:
-        plot.title(title)
+def plot_labeled_data(title,points,labels,cluster_centers,output_name = "output", col = []):
+    plt.title(title)
 
     list_labels = np.unique(labels)
     color_array = np.random.rand(len(list_labels),3,1)
@@ -73,15 +70,37 @@ def plot_labeled_data(title,points,labels,cluster_centers,plot = plt, col = []):
     for label in list_labels:
         mask_label = (labels == label)
         if (np.sum(mask_label) > 0):
-            plot.scatter(points[mask_label,0], points[mask_label,1],label = "Cluster %d" % label,color=next(colors))
+            plt.scatter(points[mask_label,0], points[mask_label,1],label = "Cluster %d" % label,color=next(colors))
         else:
             next(colors)
 
-    plot.plot(cluster_centers[:,0], cluster_centers[:,1],'ko', label="Cluster centers")
+    plt.plot(cluster_centers[:,0], cluster_centers[:,1],'ko', label="Cluster centers")
 
-    plot.legend(prop={'size':_legend_size})
-    return color_array
+    plt.legend(prop={'size':_legend_size})
+    plt.gcf().savefig("Report/Figures/%s.eps" % output_name)
+    plt.close(plt.gcf())
 
+def plot_log_likelihood_evolution(l_tr,l_test,output_name="output"):
+    xaxis = range(len(l_tr))
+    f, axarr = plt.subplots(2, sharex=True, figsize=(8,8))
+    f.suptitle('Log-likelihood evolution (HMM model)', fontsize=15)
+    axarr[0].plot(xaxis,l_tr,'r')
+    axarr[0].set_ylabel('log-likelihood (train)')
+    ymin0, ymax0 = axarr[0].get_ylim()
+    axarr[0].grid(True)
+    axarr[1].plot(xaxis,l_test,'b')
+    axarr[1].set_ylabel('log-likelihood (test)')
+    ymin1, ymax1 = axarr[1].get_ylim()
+    axarr[1].set_xlabel('iterations')
+    axarr[1].grid(True)
+
+    # set ylim
+    axarr[0].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
+    axarr[1].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
+    #f.tight_layout()
+
+    plt.gcf().savefig("Report/Figures/%s.eps" % output_name)
+    plt.close(plt.gcf())
 
 def plot_r(probas, N, output_name="output"):
     width = 1/1.5

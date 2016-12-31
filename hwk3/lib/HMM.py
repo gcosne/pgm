@@ -205,7 +205,7 @@ def log_likelihood_HMM(data_points,n_states,A,sigmas,mus,pi,r=None,s=None):
                     result += s[t,k,l]*math.log(A[k,l])
     return result
 
-def EM_HMM_likelihood(tr_data,test_data,n_states): # run the EM on HMM while recording the log likelihoods along the iterations
+def EM_HMM_likelihood(tr_data,test_data,n_states,mus,sigmas): # run the EM on HMM while recording the log likelihoods along the iterations
     log_likelihood_tr = []
     log_likelihood_test = []
     ##############################
@@ -213,8 +213,8 @@ def EM_HMM_likelihood(tr_data,test_data,n_states): # run the EM on HMM while rec
     ##############################
 
     # init with GM
-    print "init with GM ..."
-    labels, mus, sigmas, pi_vector, Q = GM.EM_algo(tr_data,n_states)
+    #print "init with GM ..."
+    #_, mus, sigmas, _, _ = GM.EM_algo(tr_data,n_states)
     # init transition matrix
     A = (1.0/6.0)*np.ones([4,4])
     for k in range(len(A)):
@@ -270,4 +270,4 @@ def EM_HMM_likelihood(tr_data,test_data,n_states): # run the EM on HMM while rec
     #for i in range(len(labels)):
     #   labels[i] = np.argmax(r[i,:])
 
-    return log_likelihood_tr, log_likelihood_test
+    return A, mus, sigmas, pi , log_likelihood_tr, log_likelihood_test

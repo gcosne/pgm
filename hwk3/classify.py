@@ -62,9 +62,9 @@ def design_matrix(data_points):
 ##################################################
 
 
-def question2(tr_data,test_data,n_states):
+def question2(tr_data,test_data,n_clusters):
     # compute GM
-    labels, mus, sigmas, pi_vector, Q = GM.EM_algo(tr_data,n_states)
+    labels, mus, sigmas, pi_vector, Q = GM.EM_algo(tr_data,n_clusters)
     # define transition matrix
     A = (1.0/6.0)*np.ones([4,4])
     for k in range(len(A)):
@@ -84,38 +84,37 @@ def question4(data_points,A,mus,sigmas,pi):
     print "------ A -----"
     print A
 
-def question5(tr_data,test_data,n_clusters):
-    l_tr, l_test = HMM.EM_HMM_likelihood(tr_data,test_data,n_clusters)
-    xaxis = range(len(l_tr))
+def question5(tr_data,test_data,l_tr,l_test):
+    # xaxis = range(len(l_tr))
+    # f, axarr = plt.subplots(2, sharex=True, figsize=(8,8))
+    # f.suptitle('Log-likelihood evolution (HMM model)', fontsize=15)
+    # axarr[0].plot(xaxis,l_tr,'r')
+    # axarr[0].set_ylabel('log-likelihood (train)')
+    # ymin0, ymax0 = axarr[0].get_ylim()
+    # axarr[0].grid(True)
+    # axarr[1].plot(xaxis,l_test,'b')
+    # axarr[1].set_ylabel('log-likelihood (test)')
+    # ymin1, ymax1 = axarr[1].get_ylim()
+    # axarr[1].set_xlabel('iterations')
+    # axarr[1].grid(True)
 
-    f, axarr = plt.subplots(2, sharex=True, figsize=(8,8))
-    f.suptitle('Log-likelihood evolution (HMM model)', fontsize=15)
-    axarr[0].plot(xaxis,l_tr,'r')
-    axarr[0].set_ylabel('log-likelihood (train)')
-    ymin0, ymax0 = axarr[0].get_ylim()
-    axarr[0].grid(True)
-    axarr[1].plot(xaxis,l_test,'b')
-    axarr[1].set_ylabel('log-likelihood (test)')
-    ymin1, ymax1 = axarr[1].get_ylim()
-    axarr[1].set_xlabel('iterations')
-    axarr[1].grid(True)
+    # # set ylim
+    # axarr[0].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
+    # axarr[1].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
+    # #f.tight_layout()
 
-    # set ylim
-    axarr[0].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
-    axarr[1].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
-    #f.tight_layout()
+    # plt.gcf().savefig("Report/Figures/question5.eps")
+    # plt.close(plt.gcf())
+    plotting.plot_log_likelihood_evolution(l_tr,l_test,output_name="question%d"%5)
 
-    plt.gcf().savefig("Report/Figures/question5.eps")
-    plt.close(plt.gcf())
-
-def question6(tr_data,test_data,n_states,A,mus,sigmas,pi):
-    labels, mu_vector, sigmas, pi_vector, Q =  GM.EM_algo_isotropic(tr_data,n_states)
+def question6(tr_data,test_data,n_clusters,A,mus,sigmas,pi):
+    labels, mu_vector, sigmas, pi_vector, Q =  GM.EM_algo_isotropic(tr_data,n_clusters)
     result_iso = np.array([GM.log_likelihood(tr_data,mu_vector,sigmas,pi_vector),GM.log_likelihood(test_data,mu_vector,sigmas,pi_vector)])
 
-    labels, mu_vector, sigmas, pi_vector, Q =  GM.EM_algo(tr_data,n_states)
+    labels, mu_vector, sigmas, pi_vector, Q =  GM.EM_algo(tr_data,n_clusters)
     result_gm = np.array([GM.log_likelihood(tr_data,mu_vector,sigmas,pi_vector),GM.log_likelihood(test_data,mu_vector,sigmas,pi_vector)])
 
-    result_hmm = np.array([HMM.log_likelihood_HMM(tr_data,n_states,A,sigmas,mus,pi),HMM.log_likelihood_HMM(test_data,n_states,A,sigmas,mus,pi)])
+    result_hmm = np.array([HMM.log_likelihood_HMM(tr_data,n_clusters,A,sigmas,mus,pi),HMM.log_likelihood_HMM(test_data,n_clusters,A,sigmas,mus,pi)])
 
     print '---------------'
     print 'LOG LIKELIHOODS'
@@ -164,12 +163,7 @@ def viterbi(data, sigmas, mus, A, p, K, plot):
     q_best = np.argmax(log_v[:,T-1])
     out[T-1] = q_best
     for t in range(T-2,-1,-1):
-        out[t] = state[out[t+1],t]
-
-    if plot:
-        plotting.plot_labeled_data("Viterbi decoding on training dataset",data,out,mus)
-        plt.gcf().savefig("Report/Figures/question8.eps")
-        plt.close(plt.gcf())
+        out[int(t)] = state[out[int(t)+1],int(t)]
 
     return out
 
@@ -200,38 +194,77 @@ def main():
     print "test set : " +str(test_data.shape)
     print "---------------"
 
+    print "---- First, compute all models for all clustering methods ----"
+    # l_train is the sequence of log likelihoods along the iterations of the training data
+    # l_test is the sequence of log likelihoods along the iterations of the training data
 
-    A, mus, sigmas, pi = HMM.EM_HMM(tr_data,n_clusters)
+    _, mu_vector_iso, sigmas_iso, pi_vector_iso,_ =  GM.EM_algo_isotropic(tr_data,n_clusters)
+    _, mu_vector_gm, sigmas_gm, pi_vector_gm, _ =  GM.EM_algo(tr_data,n_clusters)
+
+    A, mus, sigmas, pi, l_tr, l_test = HMM.EM_HMM_likelihood(tr_data,test_data,n_clusters,mu_vector_gm,sigmas_gm)
     r_tr = HMM.update_r(tr_data,sigmas,mus,A,pi)
     p_tr = HMM.update_pi0(r_tr)
     r_test = HMM.update_r(test_data,sigmas,mus,A,pi)
-
+    print "------------------ All models computed -----------------------"
 
     for q in questions:
         if (q==2):
             print '------------------'
             print 'Computing answer 2'
-            question2(tr_data,test_data,n_clusters)
+            # define transition matrix
+            A_dummy = (1.0/6.0)*np.ones([4,4])
+            for k in range(len(A_dummy)):
+                A_dummy[k,k] = 0.5
+            # initial distribution for the hidden state
+            pi_dummy = 0.25*np.ones(4)
+
+            # compute messages and compute probabilities (first dimension is the hidden state index / second dimension is time
+            r_dummy = HMM.update_r(test_data,sigmas_gm,mu_vector_gm,A_dummy,pi_dummy)
+
+            number_of_points_to_show = 100
+            # plot probabilities
+            plotting.plot_r(r_dummy.T,number_of_points_to_show,"question2")
             continue
         if (q==4):
             print '------------------'
             print 'Computing answer 4'
-            question4(tr_data,A,mus,sigmas,pi)
+            print "----- PI -----"
+            print pi
+            print "------ A -----"
+            print A
             continue
         if (q==5):
             print '------------------'
             print 'Computing answer 5'
-            question5(tr_data,test_data,n_clusters)
+            plotting.plot_log_likelihood_evolution(l_tr,l_test,"question%d" % q)
             continue
         if (q==6):
             print '------------------'
             print 'Computing answer 6'
-            question6(tr_data,test_data,n_clusters,A,mus,sigmas,pi)
+            result_iso = np.array([GM.log_likelihood(tr_data,mu_vector_iso,sigmas_iso,pi_vector_iso),GM.log_likelihood(test_data,mu_vector_iso,sigmas_iso,pi_vector_iso)])
+
+            result_gm = np.array([GM.log_likelihood(tr_data,mu_vector_gm,sigmas_gm,pi_vector_gm),GM.log_likelihood(test_data,mu_vector_gm,sigmas_gm,pi_vector_gm)])
+
+            result_hmm = np.array([HMM.log_likelihood_HMM(tr_data,n_clusters,A,sigmas,mus,pi),HMM.log_likelihood_HMM(test_data,n_clusters,A,sigmas,mus,pi)])
+
+            print '----------------------------------'
+            print 'final LOG LIKELIHOODS [train,test]'
+            print '----------------------------------'
+            print 'Isotropic GM'
+            print result_iso
+            print ''
+            print 'General GM'
+            print result_gm
+            print ''
+            print 'Hidden Markov Model'
+            print result_hmm
+
             continue
         if (q==8):
             print '------------------'
             print 'Computing answer 8'
             out = viterbi(tr_data, sigmas, mus, A, p_tr, n_clusters, True)
+            plotting.plot_labeled_data("Viterbi decoding on training dataset",tr_data,out,mus,"question%d" % q)
             continue
         if (q==9):
             print '------------------'
