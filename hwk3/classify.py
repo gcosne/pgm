@@ -173,7 +173,7 @@ def viterbi(data, sigmas, mus, A, p, K, plot):
 
 def main():
     # plot setttings
-    supported_questions = np.array([2,4,5,6,8,9,10,11])
+    supported_questions = np.array([2,4,5,6,8,9,10])
 
     args = parseArguments()
     if args.q is None:
@@ -276,39 +276,51 @@ def main():
         if (q==10):
             print '------------------'
             print 'Computing answer 10'
-            state = np.argmax(r_test, axis = 1)
-            state = state[0:100]
-            # Plot the most likely state according to marginal probability
-            plt.title("State using marginal probability")
-            plt.xlabel("Time")
-            plt.ylabel("State")
-            width = 1/1.5
-            x = np.arange(100)
-            plt.bar(x[state==0], 1+state[state==0], width, color='r', label="q_t = 0")
-            plt.bar(x[state==1], 1+state[state==1], width, color='b', label="q_t = 1")
-            plt.bar(x[state==2], 1+state[state==2], width, color='g', label="q_t = 2")
-            plt.bar(x[state==3], 1+state[state==3], width, color='c', label="q_t = 3")
-            plt.legend(numpoints=1)
-            plt.gcf().savefig("Report/Figures/question10.eps")
-            plt.close(plt.gcf())
-            continue
-        if (q==11):
+            state_10 = np.argmax(r_test, axis = 1)
+            state_10 = state_10[0:100]
             print '------------------'
             print 'Computing answer 11'
             out = viterbi(test_data, sigmas, mus, A, p_tr, n_clusters, False)
-            state = out[0:100]
-            # Plot the most likely state using Viterbi decoding
-            plt.title("State using Viterbi decoding")
-            plt.xlabel("Time")
-            plt.ylabel("State")
-            width = 1/1.5
+            state_11 = out[0:100]
+            print '------------------'
+            print 'Plotting answer 10-11'
+            f, axarr = plt.subplots(3, sharex=True, figsize=(8,8))
+            f.suptitle('State using marginal decoding, viterbi and differences between the 2', fontsize=15)
+            # Plot the most likely state according to marginal probability
+            axarr[0].set_title("State using marginal probability")
+            axarr[0].set_ylabel("State")
+            width = 1
             x = np.arange(100)
-            plt.bar(x[state==0], 1+state[state==0], width, color='r', label="q_t = 0")
-            plt.bar(x[state==1], 1+state[state==1], width, color='b', label="q_t = 1")
-            plt.bar(x[state==2], 1+state[state==2], width, color='g', label="q_t = 2")
-            plt.bar(x[state==3], 1+state[state==3], width, color='c', label="q_t = 3")
-            plt.legend(numpoints=1)
-            plt.gcf().savefig("Report/Figures/question11.eps")
+            axarr[0].bar(x[state_10==0], state_10[state_10==0]+1, width, color='r', label="q_t = 0")
+            axarr[0].bar(x[state_10==1], state_10[state_10==1], width, color='b', label="q_t = 1")
+            axarr[0].bar(x[state_10==2], state_10[state_10==2]-1, width, color='g', label="q_t = 2")
+            axarr[0].bar(x[state_10==3], state_10[state_10==3]-2, width, color='k', label="q_t = 3")
+            axarr[0].legend(numpoints=1)
+            ymin0, ymax0 = axarr[0].get_ylim()
+            # Plot the most likely state using Viterbi decoding
+            axarr[1].set_title("State using Viterbi decoding")
+            axarr[1].set_ylabel("State")
+            y = np.arange(100)
+            axarr[1].bar(y[state_11==0], state_11[state_11==0]+1, width, color='r', label="q_t = 0")
+            axarr[1].bar(y[state_11==1], state_11[state_11==1], width, color='b', label="q_t = 1")
+            axarr[1].bar(y[state_11==2], state_11[state_11==2]-1, width, color='g', label="q_t = 2")
+            axarr[1].bar(y[state_11==3], state_11[state_11==3]-2, width, color='k', label="q_t = 3")
+            axarr[1].legend(numpoints=1)
+            ymin1, ymax1 = axarr[1].get_ylim()
+            # Plot the difference
+            axarr[2].set_title("Differences between the 2 methods")
+            axarr[2].set_xlabel("Time")
+            axarr[2].set_ylabel("Difference")
+            z = np.arange(100)
+            labels = np.zeros((100))
+            for i in range(100):
+                if state_11[i] != state_10[i]:
+                    labels[i] = 1
+            axarr[2].bar(z, labels, width, color='r', label="Difference")
+            axarr[2].legend(numpoints=1)
+            axarr[2].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
+            # Save figure
+            plt.gcf().savefig("Report/Figures/question10-11.eps")
             plt.close(plt.gcf())
             continue
 
