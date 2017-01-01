@@ -134,7 +134,7 @@ def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
         I = len(en_sentence)
         count += count(i, ip, fr_corpus, en_corpus, fr, ksi) * (len(en_sentence) == I)
-        return count
+    return count
 
 # posterior count c(f,e)
 def count_emission(f, e, fr_corpus, en_corpus, gamma):
@@ -148,7 +148,7 @@ def count_emission(f, e, fr_corpus, en_corpus, gamma):
         for i in range(I):
             for j in range(J):
                 count += gamma(fr,j,i) * (f==fr_words[i]) * (e==en_words[j])
-        return count
+    return count
 
 # p(i|ip,I)
 def update_alignment_proba(i, ip, I, fr_corpus, en_corpus, ksi):
