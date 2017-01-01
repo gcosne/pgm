@@ -29,7 +29,7 @@ def parseArguments():
         help="path_to_english_corpus")
 
     parser.add_argument('-m', '-method', nargs='*',
-        type=int, help="(optional) Specify the models to learn: 1/IBM1 (defaults to IBM1) 2/ IBM2")
+        type=int, help="(optional) Specify the models to learn: 1/IBM1 (defaults to IBM1) 2/ IBM2 3/HMM")
 
     args = parser.parse_args()
     return args
@@ -132,9 +132,6 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
     plt.yticks(range(len(en_sentence)), en_sentence)
 
 
-############################
-
-
 ##################################################
 ###################### MAIN ######################
 ##################################################
@@ -154,7 +151,7 @@ def main():
 
     # Faire tourner sans arguments
     # fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all("corpus_fr.txt", "corpus_en.txt")
-    # methods = [1, 2]
+    # methods = [1, 2, 3]
 
     print(fr_dict)
     print(en_dict)
@@ -169,7 +166,7 @@ def main():
 
             for k in range(n_sentences):
                 plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-					P, k, 1)
+                    P, k, 1)
 
             plt.show()
 
@@ -181,11 +178,36 @@ def main():
 
             for k in range(n_sentences):
                 plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-					P, k, 2, lamb)
+                    P, k, 2, lamb)
+
+            plt.show()
+
+        if (method_index == 3):
+            # HMM
+            P = np.ones((size_dictF, size_dictE)) / size_dictF
+
+            # A COMPLETER p_initial,A,P ?
+            gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+
+            for fr in range(len(fr_corpus)):
+                a = viterbi(fr_corpus, en_corpus, fr, p_initial, fr_dict, gamma, ksi)
+                fr_sentence = fr_corpus[fr]
+                en_sentence = en_corpus[fr]
+                fr_words = imp.split_sentence(fr_sentence)
+                en_words = imp.split_sentence(en_sentence)
+                I = len(en_words)
+                J = len(fr_words)
+                for j in range(1,J):
+                    P[] *= alignment_proba(j, j-1, I, fr_corpus, en_corpus, ksi)) + np.log(emission_proba(fr_sentence[j],en_sentence[a[j]],fr_corpus, en_corpus, fr_dict, gamma)
+            lamb = 1
+            print_P_to_csv(en_dict, fr_dict, P, "output_hmm.csv")
+
+            for k in range(n_sentences):
+                plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
+                    P, k, 2, lamb)
 
             plt.show()
 
 if __name__ == '__main__':
     main()
-
 
