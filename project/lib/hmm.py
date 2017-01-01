@@ -116,7 +116,7 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
 #### maximization step ####
 
 # c(d=i-ip)
-def count(i, ip, fr_corpus, en_corpus, idx_phrase):
+def count(i, ip, fr_corpus, en_corpus, idx_phrase, ksi):
     d = i - ip
     fr_sentence = fr_corpus[idx_phrase]
     en_sentence = en_corpus[idx_phrase]
@@ -128,16 +128,16 @@ def count(i, ip, fr_corpus, en_corpus, idx_phrase):
     return count
 
 # posterior count of transitions with jump width i-ip c(ip,i,I)
-def count_alignment(ip, i, I, fr_corpus, en_corpus):
+def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
     for fr in range(len(fr_corpus)):
         fr_sentence = fr_corpus[fr]
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
         I = len(en_sentence)
-        count += count(i,ip, fr_corpus, en_corpus, fr) * (len(en_sentence) == I)
+        count += count(i, ip, fr_corpus, en_corpus, fr, ksi) * (len(en_sentence) == I)
         return count
 
 # posterior count c(f,e)
-def count_emission(f, e, fr_corpus, en_corpus):
+def count_emission(f, e, fr_corpus, en_corpus, gamma):
     for fr in range(len(fr_corpus)):
         fr_sentence = fr_corpus[fr]
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
@@ -151,13 +151,13 @@ def count_emission(f, e, fr_corpus, en_corpus):
         return count
 
 # p(i|ip,I)
-def update_alignment_proba(data_points,Q):
-    alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus) for ipp in range(I))
+def update_alignment_proba(i, ip, I, fr_corpus, en_corpus, ksi):
+    alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus, ksi) for ipp in range(I))
     return alignment_proba
 
 # p(f|e)
-def update_emission_proba(f, e, fr_corpus, en_corpus):
-    emission_proba = count_emission(f, e, fr_corpus, en_corpus) / np.sum(count_emission(k, e, fr_corpus, en_corpus) for k in range(len(fr_corpus)))
+def update_emission_proba(f, e, fr_corpus, en_corpus, fr_dict, gamma):
+    emission_proba = count_emission(f, e, fr_corpus, en_corpus, gamma) / np.sum(count_emission(k, e, fr_corpus, en_corpus, gamma) for k in fr_dict)
     return emission_proba
 
 # p(i)
@@ -200,7 +200,7 @@ def output_counts(fr_corpus,en_corpus,fr_dict,en_dict,A_array,P,p_initial_array)
 
 		# for the counts_transitions matrix
 		for d in range(len(fr_words)):
-			######## j'en suis à la
+			######## j'en suis a la
 
 
 	return counts
