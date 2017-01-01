@@ -188,26 +188,34 @@ def main():
 
             # A COMPLETER p_initial,A,P ?
             gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+            alignment = []
 
             for fr in range(len(fr_corpus)):
                 a = viterbi(fr_corpus, en_corpus, fr, p_initial, fr_dict, gamma, ksi)
-                fr_sentence = fr_corpus[fr]
-                en_sentence = en_corpus[fr]
-                fr_words = imp.split_sentence(fr_sentence)
-                en_words = imp.split_sentence(en_sentence)
-                I = len(en_words)
-                J = len(fr_words)
-                for j in range(1,J):
-                    P[] *= alignment_proba(j, j-1, I, fr_corpus, en_corpus, ksi)) + np.log(emission_proba(fr_sentence[j],en_sentence[a[j]],fr_corpus, en_corpus, fr_dict, gamma)
-            lamb = 1
+                alignment.append(a)
+
+            for i in range(size_dictF):
+                for j in range(size_dictE):
+                    P[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
+
             print_P_to_csv(en_dict, fr_dict, P, "output_hmm.csv")
 
-            for k in range(n_sentences):
-                plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                    P, k, 2, lamb)
+            for idx in range(len(fr_corpus)):
+                # x-axis : English
+                # y-axis : French
+                en_sentence = re.split(' |\'', en_corpus[idx])
+                fr_sentence = re.split(' |\'', fr_corpus[idx])
 
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+
+                ax.plot(range(len(fr_sentence)),alignment,'ro',ls='--')
+                ax.grid(True)
+                plt.xlim((-0.5,len(fr_sentence)-0.5))
+                plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
+                plt.ylim((-0.5,len(en_sentence)-0.5))
+                plt.yticks(range(len(en_sentence)), en_sentence)
             plt.show()
 
 if __name__ == '__main__':
     main()
-

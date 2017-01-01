@@ -247,4 +247,3 @@ def update_P(P,counts):
 # P is passed as a reference and is directly modified within its cells
     P = counts / np.sum(counts, axis=0)
 """
-
