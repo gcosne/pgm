@@ -115,7 +115,57 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
 
 #### maximization step ####
 
+# c(d=i-ip)
+def count(i, ip, fr_corpus, en_corpus, idx_phrase):
+    d = i - ip
+    fr_sentence = fr_corpus[idx_phrase]
+    en_sentence = en_corpus[idx_phrase]
+    I = len(en_sentence)
+    J = len(fr_sentence)
+    for j in range(0,J-1):
+        for k in range(I):
+            count += ksi[idx_phrase,j,k+d,k]
+    return count
 
+# posterior count of transitions with jump width i-ip c(ip,i,I)
+def count_alignment(ip, i, I, fr_corpus, en_corpus):
+    for fr in range(len(fr_corpus)):
+        fr_sentence = fr_corpus[fr]
+        en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
+        I = len(en_sentence)
+        count += count(i,ip, fr_corpus, en_corpus, fr) * (len(en_sentence) == I)
+        return count
+
+# posterior count c(f,e)
+def count_emission(f, e, fr_corpus, en_corpus):
+    for fr in range(len(fr_corpus)):
+        fr_sentence = fr_corpus[fr]
+        en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
+        fr_words = imp.split_sentence(fr_sentence)
+        en_words = imp.split_sentence(en_sentence)
+        J = len(fr_sentence)
+        I = len(en_sentence)
+        for i in range(I):
+            for j in range(J):
+                count += gamma(fr,j,i) * (f==fr_words[i]) * (e==en_words[j])
+        return count
+
+# p(i|ip,I)
+def update_alignment_proba(data_points,Q):
+    alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus) for ipp in range(I))
+    return alignment_proba
+
+# p(f|e)
+def update_emission_proba(f, e, fr_corpus, en_corpus):
+    emission_proba = count_emission(f, e, fr_corpus, en_corpus) / np.sum(count_emission(k, e, fr_corpus, en_corpus) for k in range(len(fr_corpus)))
+    return emission_proba
+
+# p(i)
+def update_pi0(gamma):
+    pi0_update = gamma[0,:,:] / np.sum(gamma[0,:,:])
+    return pi0_update
+
+"""
 # the A array will have the sup of lengths of english sentences as a second dimension
 def output_counts(fr_corpus,en_corpus,fr_dict,en_dict,A_array,P,p_initial_array):
 # steps: sentence per sentence, update the counts in the count array, with is of same size as the P array
@@ -158,4 +208,4 @@ def output_counts(fr_corpus,en_corpus,fr_dict,en_dict,A_array,P,p_initial_array)
 def update_P(P,counts):
 # P is passed as a reference and is directly modified within its cells
 	P = counts / np.sum(counts, axis=0)
-
+"""
