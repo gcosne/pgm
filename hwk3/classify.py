@@ -44,7 +44,7 @@ def parseArguments():
         type=int, help="(optional) Specify the target number of clusters (defaults to 4)")
 
     parser.add_argument('-q', '-question', nargs='*',
-        type=int, help="(optional) Specify the questions you want the answers to (defauts to question 2) Questions are 2 4 5 6 8 9 10 11")
+        type=int, help="(optional) Specify the questions you want the answers to (defauts to question 2, questions 10 and 11 are regrouped) Questions are 2 4 5 6 8 9 10")
 
     args = parser.parse_args()
     return args
@@ -163,7 +163,7 @@ def viterbi(data, sigmas, mus, A, p, K, plot):
     q_best = np.argmax(log_v[:,T-1])
     out[T-1] = q_best
     for t in range(T-2,-1,-1):
-        out[int(t)] = state[out[int(t)+1],int(t)]
+        out[t] = state[int(out[t+1]),t]
 
     return out
 
@@ -320,8 +320,10 @@ def main():
             axarr[2].legend(numpoints=1)
             axarr[2].set_ylim([min(ymin0,ymin1),max(ymax0,ymax1)])
             # Save figure
-            plt.gcf().savefig("Report/Figures/question10-11.eps")
+            output_path = "Report/Figures/question10-11.eps"
+            plt.gcf().savefig(output_path)
             plt.close(plt.gcf())
+            print "Figure saved at %s" % output_path
             continue
 
         print "Warning : unsupported question -> %d" % q
