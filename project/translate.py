@@ -145,7 +145,6 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
     ax.legend(legend, loc=4)
     ax.hold(False)
 
-
 ##################################################
 ###################### MAIN ######################
 ##################################################

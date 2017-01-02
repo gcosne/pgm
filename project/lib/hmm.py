@@ -285,7 +285,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 10
+    max_iter = 50
     while counter < max_iter:
         counter += 1
         print "\riteration : %d" % counter,
@@ -327,7 +327,7 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
     for j in range(1,J):
         for i in range(I):
             # V(i,j) = max_ip p(i|ip,I) p(fj|ei) V(ip, j-1)
-            (log_v[i,j], alignment) = max((np.log(eps + emission_proba(fr_words[0],en_words[i],fr_dict,en_dict,c_emissions)) + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) + log_v[ip, j-1], ip) for ip in range(I))
+            (log_v[i,j], alignment) = max((np.log(eps + emission_proba(fr_words[j],en_words[i],fr_dict,en_dict,c_emissions)) + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) + log_v[ip, j-1], ip) for ip in range(I))
             state[i,j] = alignment #a_j-1
 
     # Compute the Viterbi decoding
