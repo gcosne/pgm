@@ -187,23 +187,13 @@ def main():
         if (method_index == 3):
             # HMM
             A, P, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict)
-            # P = np.ones((size_dictF, size_dictE)) / size_dictF
-
-            # # A COMPLETER p_initial,A,P ?
-            # gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
-            # alignment = []
-
-            # for fr in range(len(fr_corpus)):
-            #     a = viterbi(fr_corpus, en_corpus, fr, p_initial, fr_dict, gamma, ksi)
-            #     alignment.append(a)
-
-            # for i in range(size_dictF):
-            #     for j in range(size_dictE):
-            #         P[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
 
             print_P_to_csv(en_dict, fr_dict, P, "output_hmm.csv")
 
+            c_emissions = hmm.count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
+
             for idx in range(len(fr_corpus)):
+                alignment = hmm.viterbi(fr_corpus, en_corpus, idx, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions)
                 # x-axis : English
                 # y-axis : French
                 en_sentence = re.split(' |\'', en_corpus[idx])
