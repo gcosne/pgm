@@ -21,7 +21,7 @@ def alpha_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
     for i in range(I):
         tmp_vector = np.log(A[I,i,:]) + previous_alpha #log of previous alpha
         result[i] = log_sum(tmp_vector)
-        result[i] += log_proba_translate(fr_sentence[j],en_sentence[i],fr_dict,en_dict,update_P)
+        result[i] += log_proba_translate(fr_sentence[j],en_sentence[i],fr_dict,en_dict,P)
     return result
 
 def beta_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,next_beta):
@@ -121,11 +121,14 @@ def count(i, ip, fr_corpus, en_corpus, idx_phrase, ksi):
     d = i - ip
     fr_sentence = fr_corpus[idx_phrase]
     en_sentence = en_corpus[idx_phrase]
-    I = len(en_sentence)
-    J = len(fr_sentence)
+    fr_words = imp.split_sentence(fr_sentence)
+    en_words = imp.split_sentence(en_sentence)
+    I = len(en_words)
+    J = len(fr_words)
     for j in range(0,J-1):
         for k in range(I):
-            count += ksi[idx_phrase,j,k+d,k]
+            if (k+d)<ksi.shape[1] and (k+d)>-1:
+                count += ksi[idx_phrase,j,k+d,k]
     return count
 
 # posterior count of transitions with jump width i-ip c(ip,i,I)
@@ -133,8 +136,9 @@ def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
     for fr in range(len(fr_corpus)):
         fr_sentence = fr_corpus[fr]
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
-        I = len(en_sentence)
-        count += count(i, ip, fr_corpus, en_corpus, fr, ksi) * (len(en_sentence) == I)
+        fr_words = imp.split_sentence(fr_sentence)
+        en_words = imp.split_sentence(en_sentence)
+        count += count(i, ip, fr_corpus, en_corpus, fr, ksi) * (len(en_words) == I)
     return count
 
 # posterior count c(f,e)
@@ -144,15 +148,15 @@ def count_emission(f, e, fr_corpus, en_corpus, gamma):
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
         fr_words = imp.split_sentence(fr_sentence)
         en_words = imp.split_sentence(en_sentence)
-        J = len(fr_sentence)
-        I = len(en_sentence)
+        J = len(fr_words)
+        I = len(en_words)
         for i in range(I):
             for j in range(J):
-                count += gamma(fr,j,i) * (f==fr_words[i]) * (e==en_words[j])
+                count += gamma[fr,j,i] * (f==fr_words[j]) * (e==en_words[i])
     return count
 
 # p(i|ip,I)
-def alignment_proba(i, ip, I, fr_corpus, en_corpus, ksi):
+def alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi):
     alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus, ksi) for ipp in range(I))
     return alignment_proba
 
@@ -161,10 +165,80 @@ def emission_proba(f, e, fr_corpus, en_corpus, fr_dict, gamma):
     emission_proba = count_emission(f, e, fr_corpus, en_corpus, gamma) / np.sum(count_emission(k, e, fr_corpus, en_corpus, gamma) for k in fr_dict)
     return emission_proba
 
-# p(idx_phrase,i)
-def p_initial(gamma):
-    p_initial = gamma[:,0,:] / np.sum(gamma[:,0,:])
-    return p_initial
+# # p(idx_phrase,i)
+# def p_initial(gamma):
+#     p_initial = gamma[:,0,:] / np.sum(gamma[:,0,:]) # doute
+#     return p_initial
+
+def p_init(gamma,max_I):
+    p_init = np.zeros(max_I)
+    for gam in gamma:
+        I = gam.shape[1]
+        p_init[:I] = p_init[:I] + gam[0,:]
+    p_init = p_init / np.sum(p_init)
+
+# update the emission probility matrix
+def update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma):
+    for f in range(P.shape[0]):
+        for e in range(P.shape[1]):
+            P[f,e] = emission_proba(fr_dict[f], en_dict[e], fr_corpus, en_corpus, fr_dict, gamma)
+
+# update the 3-dimensionnal transition matrix
+def update_A(A,fr_corpus, en_corpus, ksi):
+    for I in range(A.shape[0]):
+        for i in range(len(A[I])):
+            for ip in range(len(A[I])): #A[I] should be square
+                A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
+
+def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
+    print "Computing HMM"
+    ###################
+    ##### INIT ########
+    ###################
+    Is = np.zeros(len(en_corpus))
+    for e in range(len(en_corpus)):
+        Is[e] = len(imp.split_sentence(en_corpus[e]))
+
+    # lengths of English sentences
+    lengths = np.unique(Is)
+    max_I = np.max(lengths)
+
+    # init A
+    A = np.array(len(lengths),dtype=object)
+    for i in range(A.shape[0]):
+        A[i] = (0.5/(lengths[i]-1))*np.ones(lengths[i])
+        A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
+
+    # init P as uniform
+    P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
+
+    # init P initial
+    p_initial = np.ones(max_I) / max_I
+
+    ###########################
+    #### FIRST EXPECTATION ####
+    ###########################
+    gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+
+    ###########################
+    ### WHILE NOT CONVERGED ###
+    ###########################
+    counter = 0
+    max_iter = 10
+    while counter < max_iter:
+        counter += 1
+        print "\riteration : %d" % counter,
+        sys.stdout.flush()
+
+        # Maximisation
+        update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma)
+        update_A(A,fr_corpus, en_corpus, ksi)
+        p_initial = p_init(gamma,max_I)
+
+        # Expectation
+        gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+
+    return A, P, p_initial, gamma, ksi
 
 ############################
 ######### DECODING #########
@@ -186,7 +260,8 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, gamma, ksi):
     # Base case
     for i in range(I):
         # V(i,0) = p(i) p(f_0|e_i)
-        log_v[i,0] = np.log(p_initial[idx_phrase,i]) + np.log(emission_proba(fr_sentence[0],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma))
+        # log_v[i,0] = np.log(p_initial[idx_phrase,i]) + np.log(emission_proba(fr_sentence[0],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma))
+        log_v[i,0] = np.log(p_initial[i]) + np.log(emission_proba(fr_sentence[0],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma))
 
     # Recursion
     for j in range(1,J):
@@ -201,7 +276,7 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, gamma, ksi):
     for j in range(J-1,0,-1):
         a[int(j)-1] = state[a[int(j)],int(j)-1]
 
-    return a
+    return a # list of size J
 
 """
 # the A array will have the sup of lengths of english sentences as a second dimension
