@@ -224,7 +224,7 @@ def emission_proba(f,e,fr_dict,en_dict,c_emissions):
 #     return p_initial
 
 def p_init(gamma,max_I):
-    p_init = np.zeros(max_I)
+    p_init = np.zeros(int(max_I))
     for gam in gamma:
         I = gam.shape[1]
         p_init[:I] = p_init[:I] + gam[0,:]
@@ -274,7 +274,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
 
     # init P initial
-    p_initial = np.ones(max_I) / max_I
+    p_initial = np.ones(int(max_I)) / max_I
 
     ###########################
     #### FIRST EXPECTATION ####
@@ -334,6 +334,6 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
     i_best = np.argmax(log_v[:,J-1])
     a[J-1] = i_best
     for j in range(J-1,0,-1):
-        a[int(j)-1] = state[a[int(j)],int(j)-1]
+        a[int(j)-1] = state[a[int(j)],int(j)]
 
     return a # list of size J
