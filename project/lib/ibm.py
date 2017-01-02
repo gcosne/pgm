@@ -92,13 +92,17 @@ def h(j, i, J, I):
 
 def b(j, i, J, I, lamb, p_null):
     #  Probability that i is aligned with j
-    if j == 0:
+    null_word = p_null != 0
+    if null_word and j == 0:
         return p_null  # The first word is the null word
     else:
         Z = 0
         for j1 in range(J):
             Z += math.exp(lamb * h(i, j1, I, J))
-        return (1 - p_null) * math.exp(lamb * h(i, j-1, I, J)) / Z
+        offset = 0
+        if null_word:
+            offset = 1
+        return (1 - p_null) * math.exp(lamb * h(i, j-offset, I, J)) / Z
 
 
 def IBM2(F, E, D_F, D_E, lamb, p_null):
@@ -126,6 +130,12 @@ def IBM2(F, E, D_F, D_E, lamb, p_null):
     Jmax = 0
     phrase_size_E = [0 for i in E]
     cpt = 0
+
+    offset = 0  # For null word
+    phrase_split = re.split(' |\'', E[0])
+    if phrase_split[0] == 'NULL':
+        offset = 1
+
     for phrase in E:
         phrase_split = re.split(' |\'', phrase)
         l = len(phrase_split)
@@ -144,7 +154,7 @@ def IBM2(F, E, D_F, D_E, lamb, p_null):
 
         for n in range(N):
             I = phrase_size_F[n]
-            J = phrase_size_E[n] - 1  # Null word
+            J = phrase_size_E[n] - offset  # Null word
             for i in range(phrase_size_F[n]):
                 indF = imp.hash(D_F, re.split(' |\'', F[n])[i])
                 Z = 0
