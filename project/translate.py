@@ -111,25 +111,34 @@ def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
     return alignment
 
 def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                                P, idx, method_index, lamb=0, p_null=0, figure=plt):
+                                P, idx, methods, lamb=0, p_null=0, figure=plt):
     # idx is the index of the sentence to plot
     # x-axis : English
     # y-axis : French
     en_sentence = re.split(' |\'', en_corpus[idx])
     fr_sentence = re.split(' |\'', fr_corpus[idx])
 
-    alignment = most_likely_alignment(fr_sentence, en_sentence,
-                                fr_dict, en_dict, P, method_index, lamb, p_null)
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
-
-    ax.plot(range(len(fr_sentence)),alignment,'ro',ls='--')
     ax.grid(True)
     plt.xlim((-0.5,len(fr_sentence)-0.5))
     plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
     plt.ylim((-0.5,len(en_sentence)-0.5))
     plt.yticks(range(len(en_sentence)), en_sentence)
+    legend = []
+
+    for i in range(len(methods)):
+        alignment = most_likely_alignment(fr_sentence, en_sentence,
+                                fr_dict, en_dict, P[i], methods[i], lamb, p_null)
+        ax.plot(range(len(fr_sentence)),alignment,'o',ls='--')
+        if methods[i] < 3:
+            legend.append('IBM' + str(methods[i]))
+        elif methods[i] == 3:
+            legend.append('HMM')
+        ax.hold(True)
+
+    ax.legend(legend, loc=4)
+    ax.hold(False)
 
 
 ##################################################
@@ -144,7 +153,7 @@ def main():
     args = parseArguments()
 
     if args.m is None:
-        methods = [1]
+        methods = [1, 2]
     else:
         methods = args.m
     fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all(args.french_corpus, args.english_corpus)
@@ -153,42 +162,40 @@ def main():
     # fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all("corpus_fr.txt", "corpus_en.txt")
     # methods = [1, 2, 3]
 
+    ####### Null word ####################
+    en_dict = np.insert(en_dict, 0, 'NULL')
+    en_corpus = ['NULL ' + sentence for sentence in en_corpus]
+    #####################################
+
     print(fr_dict)
     print(en_dict)
 
+    lamb = 1
+    p_null = .1  # For IBM2
+    P = []
     for method_index in methods:
-        assert (method_index > 0 and method_index < 3), "Unsupported method index: %d" % method_index
+        assert (method_index > 0 and method_index < 4), "Unsupported method index: %d" % method_index
 
         if (method_index == 1):
             # IBM1
-            P = ibm.IBM1(fr_corpus, en_corpus, fr_dict, en_dict)
-            print_P_to_csv(en_dict, fr_dict, P, "output_ibm1.csv")
+            P1 = ibm.IBM1(fr_corpus, en_corpus, fr_dict, en_dict)
+            print_P_to_csv(en_dict, fr_dict, P1, "output_ibm1.csv")
+            P.append(P1)
 
-            for k in range(n_sentences):
-                plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                    P, k, 1)
-
-            plt.show()
 
         if (method_index == 2):
             # IBM2
-            lamb = 1
-            p_null = .1
-            P = ibm.IBM2(fr_corpus, en_corpus, fr_dict, en_dict, lamb, p_null)
-            print_P_to_csv(en_dict, fr_dict, P, "output_ibm2.csv")
+            P2 = ibm.IBM2(fr_corpus, en_corpus, fr_dict, en_dict, lamb, p_null)
+            print_P_to_csv(en_dict, fr_dict, P2, "output_ibm2.csv")
+            P.append(P2)
 
-            for k in range(n_sentences):
-                plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                    P, k, 2, lamb, p_null)
-
-            plt.show()
 
         if (method_index == 3):
             # HMM
-            P = np.ones((size_dictF, size_dictE)) / size_dictF
+            P3 = np.ones((size_dictF, size_dictE)) / size_dictF
 
             # A COMPLETER p_initial,A,P ?
-            gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+            gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P3,p_initial)
             alignment = []
 
             for fr in range(len(fr_corpus)):
@@ -197,9 +204,10 @@ def main():
 
             for i in range(size_dictF):
                 for j in range(size_dictE):
-                    P[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
+                    P3[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
 
-            print_P_to_csv(en_dict, fr_dict, P, "output_hmm.csv")
+            print_P_to_csv(en_dict, fr_dict, P3, "output_hmm.csv")
+            P.append(P3)
 
             for idx in range(len(fr_corpus)):
                 # x-axis : English
@@ -207,16 +215,12 @@ def main():
                 en_sentence = re.split(' |\'', en_corpus[idx])
                 fr_sentence = re.split(' |\'', fr_corpus[idx])
 
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
-
-                ax.plot(range(len(fr_sentence)),alignment,'ro',ls='--')
-                ax.grid(True)
-                plt.xlim((-0.5,len(fr_sentence)-0.5))
-                plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
-                plt.ylim((-0.5,len(en_sentence)-0.5))
-                plt.yticks(range(len(en_sentence)), en_sentence)
-            plt.show()
+    for k in range(n_sentences):
+        plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
+			P, k, methods, lamb, p_null)
+        #  Save plots
+        plt.savefig('output/figures/sentence' + str(k) + '.eps', format='eps', dpi=1000)
+    #  plt.show()
 
 if __name__ == '__main__':
     main()
