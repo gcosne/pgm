@@ -3,6 +3,7 @@ import import_corpus as imp
 import math
 import sys
 
+eps = 0.0000001
 ############################
 ####### EXPECTATION ########
 ############################
@@ -12,7 +13,7 @@ import sys
 #########################################################################################
 
 def log_proba_translate(fr_word,en_word,fr_dict,en_dict,P):
-    return math.log(0.0000001 + P[imp.hash(fr_dict,fr_word),imp.hash(en_dict,en_word)])
+    return math.log(eps + P[imp.hash(fr_dict,fr_word),imp.hash(en_dict,en_word)])
     # P is a sparse matrix, but in this method, only non-zero cells should have a contribution
 
 def alpha_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
@@ -71,7 +72,7 @@ def compute_all_alpha(fr_sentence,en_sentence,fr_dict,en_dict,A,P,p_initial):
     alphas = np.zeros([I,J])
     # initialization
     for i in range(I):
-        alphas[i,0] = np.log(p_initial[i]) \
+        alphas[i,0] = np.log(eps + p_initial[i]) \
         + log_proba_translate(fr_sentence[0],en_sentence[i],fr_dict,en_dict,P)
     # log recursion
     for j in range(1,J):
@@ -114,7 +115,7 @@ def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_d
         for k in range(probas.shape[1]):
             for l in range(probas.shape[2]):
                 probas[t,k,l] += log_alphas[l,t] + log_betas[k,t+1]
-                probas[t,k,l] += math.log(A[idx][k,l])
+                probas[t,k,l] += math.log(eps + A[idx][k,l])
                 probas[t,k,l] += log_proba_translate(fr_sentence[t],en_sentence[k],fr_dict,en_dict,P)
                 probas[t,k,l] -= log_sum(log_alphas[:,t] + log_betas[:,t])
     probas = np.exp(probas)
@@ -249,6 +250,7 @@ def update_A(A,fr_corpus, en_corpus, ksi):
                 A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
 
 def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
+    CONVERGENCE_THR = 0.01
     print "Computing HMM"
     ###################
     ##### INIT ########
@@ -283,7 +285,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 10
+    max_iter = 50
     while counter < max_iter:
         counter += 1
         print "\riteration : %d" % counter,
