@@ -1,11 +1,11 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.24)  1 JAN 2017 19:41
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.25)  2 JAN 2017 19:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **poster.tex
 (./poster.tex
 LaTeX2e <2016/02/01>
-Babel <3.9q> and hyphenation patterns for 7 language(s) loaded.
+Babel <3.9q> and hyphenation patterns for 5 language(s) loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/beamer/beamer.cls
 (/usr/share/texlive/texmf-dist/tex/latex/beamer/beamerbasercs.sty
 Package: beamerbasercs 2015/03/08 (rcs-revision 368aa9ba9d38)
@@ -1931,17 +1931,13 @@ Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 240.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 240.
 Package rerunfilecheck Info: File `poster.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 240.
  ) 
 Here is how much of TeX's memory you used:
- 24469 strings out of 494883
- 476527 string characters out of 6178692
- 621411 words of memory out of 5000000
- 27140 multiletter control sequences out of 15000+600000
+ 24469 strings out of 494910
+ 476527 string characters out of 6179835
+ 621315 words of memory out of 5000000
+ 27131 multiletter control sequences out of 15000+600000
  132876 words of font info for 128 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  62i,18n,102p,427b,818s stack positions out of 5000i,500n,10000p,200000b,80000s
