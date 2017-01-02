@@ -318,23 +318,16 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
     log_v = np.zeros((I, J))
     log_p = np.log(p_initial)
 
-    #emissions = count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
-
     # Base case
     for i in range(I):
         # V(i,0) = p(i) p(f_0|e_i)
-        # log_v[i,0] = np.log(p_initial[idx_phrase,i]) + np.log(emission_proba(fr_sentence[0],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma))
         log_v[i,0] = np.log(eps + p_initial[i]) + np.log(eps + emission_proba(fr_words[0],en_words[i],fr_dict,en_dict,c_emissions))
-        # log_v[i,0] = np.log(eps + p_initial[i]) + np.log(emission_proba(fr_sentence[0],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma))
 
     # Recursion
     for j in range(1,J):
         for i in range(I):
             # V(i,j) = max_ip p(i|ip,I) p(fj|ei) V(ip, j-1)
-            (log_v[i,j], alignment) = max((np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) \
-                #+ np.log(emission_proba(fr_sentence[j],en_sentence[i],fr_corpus, en_corpus, fr_dict, gamma) + log_v[ip, j-1], ip) for ip in range(I)))
-                + np.log(eps + emission_proba(fr_words[0],en_words[i],fr_dict,en_dict,c_emissions) + log_v[ip, j-1], ip) for ip in range(I)))
-
+            (log_v[i,j], alignment) = max((np.log(eps + emission_proba(fr_words[0],en_words[i],fr_dict,en_dict,c_emissions)) + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) + log_v[ip, j-1], ip) for ip in range(I))
             state[i,j] = alignment #a_j-1
 
     # Compute the Viterbi decoding

@@ -116,8 +116,7 @@ def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
         alignment.append(np.argmax(likelihood))
     return alignment
 
-def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                                P, idx, methods, lamb=0, p_null=0, figure=plt):
+def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, methods, method_index, alignment_HMM, lamb=0, p_null=0, figure=plt):
     # idx is the index of the sentence to plot
     # x-axis : English
     # y-axis : French
@@ -134,12 +133,12 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
     legend = []
 
     for i in range(len(methods)):
-        alignment = most_likely_alignment(fr_sentence, en_sentence,
-                                fr_dict, en_dict, P[i], methods[i], lamb, p_null)
-        ax.plot(range(len(fr_sentence)),alignment,'o',ls='--')
         if methods[i] < 3:
+            alignment = most_likely_alignment(fr_sentence, en_sentence, fr_dict, en_dict, P[i], methods[i], lamb, p_null)
+            ax.plot(range(len(fr_sentence)),alignment,'o',ls='--')
             legend.append('IBM' + str(methods[i]))
         elif methods[i] == 3:
+            ax.plot(range(len(fr_sentence)),alignment_HMM,'o',ls='--')
             legend.append('HMM')
         ax.hold(True)
 
@@ -186,6 +185,7 @@ def main():
     #####################################
 
     P = []
+    alignment_HMM = []
     for method_index in methods:
         assert (method_index > 0 and method_index < 4), "Unsupported method index: %d" % method_index
 
@@ -195,34 +195,31 @@ def main():
             print_P_to_csv(en_dict, fr_dict, P1, "output_ibm1.csv")
             P.append(P1)
 
-
         if (method_index == 2):
             # IBM2
             P2 = ibm.IBM2(fr_corpus, en_corpus_ibm, fr_dict, en_dict, lamb, p_null)
             print_P_to_csv(en_dict, fr_dict, P2, "output_ibm2.csv")
             P.append(P2)
 
-
         if (method_index == 3):
             # HMM
-
             A, P3, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict)
             print_P_to_csv(en_dict, fr_dict, P3, "output_hmm.csv")
             P.append(P3)
 
-            alignment = []
             c_emissions = hmm.count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
 
             for idx in range(len(fr_corpus)):
                 a = hmm.viterbi(fr_corpus, en_corpus, idx, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions)
-                alignment.append[a]
+                alignment_HMM.append(a)
 
     for k in range(n_sentences):
-        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, lamb, p_null)
-        # attention pour HMM, l alignement ne peut pas etre plot comme ca, il faut faire Viterbi
+        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, method_index, alignment_HMM[k], lamb, p_null)
+
         #  Save plots
         plt.savefig('output/figures/sentence' + str(k) + '.eps', format='eps', dpi=1000)
-    #  plt.show()
+
+    #plt.show()
 
 if __name__ == '__main__':
     main()
