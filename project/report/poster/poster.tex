@@ -57,9 +57,11 @@ Thomas Debarre, Matthieu Kirchmeyer, Sylvain Truong, Nicolas Zhang
 
 \section{Introduction}
 
-This project explores three methods to solve the problem of word alignments for a bilingual corpus from the conventional mixtures models (IBM1, IBM2) to a first-order HMM model developped in \cite{ref1}. 
+This project explores three methods to solve the problem of word alignments for a bilingual corpus : conventional mixtures models (IBM1, IBM2) and a first-order HMM model developped in \cite{ref1}. 
 
 The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
+% I would not say "translate" but rather understand the underlying linguistics between two languages. In our study, doing so boils down to finding most probable alignments.  
+
 
 We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\mathbf{f}^{(1)},\mathbf{e}^{(1)}), \dots , (\mathbf{f}^{(N)},\mathbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
 
