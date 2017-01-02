@@ -36,3 +36,7 @@ def hash(dictionary, word):
         result = -1 # word not found
     assert result > -1, "in hash: word not found -> " + word
     return result
+
+def split_sentence(sentence):
+    sentence_split = re.split(' |\'', sentence)
+    return sentence_split

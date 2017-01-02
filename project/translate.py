@@ -15,6 +15,7 @@ import random
 import operator
 import re
 from lib import ibm as ibm
+from lib import hmm
 from lib import import_corpus as imp
 
 # flake8: noqa
@@ -157,7 +158,7 @@ def main():
     print(en_dict)
 
     for method_index in methods:
-        assert (method_index > 0 and method_index < 3), "Unsupported method index: %d" % method_index
+        assert (method_index > 0 and method_index < 4), "Unsupported method index: %d" % method_index
 
         if (method_index == 1):
             # IBM1
@@ -185,19 +186,20 @@ def main():
 
         if (method_index == 3):
             # HMM
-            P = np.ones((size_dictF, size_dictE)) / size_dictF
+            A, P, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict)
+            # P = np.ones((size_dictF, size_dictE)) / size_dictF
 
-            # A COMPLETER p_initial,A,P ?
-            gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
-            alignment = []
+            # # A COMPLETER p_initial,A,P ?
+            # gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+            # alignment = []
 
-            for fr in range(len(fr_corpus)):
-                a = viterbi(fr_corpus, en_corpus, fr, p_initial, fr_dict, gamma, ksi)
-                alignment.append(a)
+            # for fr in range(len(fr_corpus)):
+            #     a = viterbi(fr_corpus, en_corpus, fr, p_initial, fr_dict, gamma, ksi)
+            #     alignment.append(a)
 
-            for i in range(size_dictF):
-                for j in range(size_dictE):
-                    P[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
+            # for i in range(size_dictF):
+            #     for j in range(size_dictE):
+            #         P[i,j] = emission_proba(fr_dict[i],en_dict[j],fr_corpus, en_corpus, fr_dict, gamma)
 
             print_P_to_csv(en_dict, fr_dict, P, "output_hmm.csv")
 

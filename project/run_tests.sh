@@ -5,6 +5,6 @@ main="translate.py"
 CORPUS_FR="corpus_fr.txt"
 CORPUS_EN="corpus_en.txt"
 
-method="2"
+method="3"
 
 python $main $CORPUS_FR $CORPUS_EN -m $method
