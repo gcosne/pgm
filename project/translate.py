@@ -81,7 +81,7 @@ def print_P_to_csv(en_dict, fr_dict, P, output_path = 'output.csv'):
     f.close()
 
 def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
-                            en_dict, P, method_index, lamb=0):
+                            en_dict, P, method_index, lamb=0, p_null=0):
     en_indices = []
 
     for word in en_sentence:
@@ -104,14 +104,14 @@ def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
             likelihood = np.zeros(len(en_sentence))
             #import pdb; pdb.set_trace()
             for j in range(len(en_sentence)):
-                likelihood[j] = ibm.b(j, i, len(en_sentence),
-                                len(fr_sentence), lamb) * tmp_P[fr_idx, j]
+                likelihood[j] = ibm.b(j, i, len(en_sentence)-1,
+                                len(fr_sentence), lamb, p_null) * tmp_P[fr_idx, j]
 
         alignment.append(np.argmax(likelihood))
     return alignment
 
 def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                                P, idx, method_index, lamb=0, figure=plt):
+                                P, idx, method_index, lamb=0, p_null=0, figure=plt):
     # idx is the index of the sentence to plot
     # x-axis : English
     # y-axis : French
@@ -119,7 +119,7 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
     fr_sentence = re.split(' |\'', fr_corpus[idx])
 
     alignment = most_likely_alignment(fr_sentence, en_sentence,
-                                        fr_dict, en_dict, P, method_index, lamb)
+                                fr_dict, en_dict, P, method_index, lamb, p_null)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -173,12 +173,13 @@ def main():
         if (method_index == 2):
             # IBM2
             lamb = 1
-            P = ibm.IBM2(fr_corpus, en_corpus, fr_dict, en_dict, lamb)
+            p_null = .1
+            P = ibm.IBM2(fr_corpus, en_corpus, fr_dict, en_dict, lamb, p_null)
             print_P_to_csv(en_dict, fr_dict, P, "output_ibm2.csv")
 
             for k in range(n_sentences):
                 plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict,
-                    P, k, 2, lamb)
+                    P, k, 2, lamb, p_null)
 
             plt.show()
 
