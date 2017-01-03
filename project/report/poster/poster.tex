@@ -60,10 +60,10 @@ Thomas Debarre, Matthieu Kirchmeyer, Sylvain Truong, Nicolas Zhang
 
 \section{Introduction}
 
-This project explores three methods to solve the problem of word alignments for a bilingual corpus from the conventional mixtures models (IBM1, IBM2) to a first-order HMM model developped in \cite{vogel}. 
+This project explores three methods to solve the problem of word alignments for a bilingual corpus from the conventional mixtures models (\textbf{IBM1}, \textbf{IBM2}) to a first-order Hidden Markov model (\textbf{HMM}) developped in \cite{vogel}. 
 
 %The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
-The goal is to understand the underlying lingustic bonds that exist between two languages (French and English in all that follows). These bonds are here addressed with the problem of words alignments in foreign-languages sentence pairs.
+The goal is to understand the underlying lingustic bonds that exist between two languages (French and English in all that follows). These bonds are here addressed with the problem of word alignments in translated French-English sentence pairs.
 
 We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\textbf{f}^{(1)},\textbf{e}^{(1)}), \dots , (\textbf{f}^{(N)},\textbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
 
@@ -111,7 +111,7 @@ The assumption in IBM2 is simple enough that the model is very fast to train, bu
 
 \subsection{HMM-based alignment models}
 
-The HMM-based alignment models were introduced by \textit{Vogel and al.} and aim at modeling the joint probability of a French sentence $\textbf{f}$, of length $J$ and an alignment $\textbf{a}\in \{1,\dots,I\}^J$, given a English sentence $\textbf{e}$ of length $I$.
+The HMM-based alignment models were introduced by \textit{Vogel and al.}(1996) and aim at modeling the joint probability of a French sentence $\textbf{f}$, of length $J$ and an alignment $\textbf{a}\in \{1,\dots,I\}^J$, given a English sentence $\textbf{e}$ of length $I$.
 Without, loss of generality, this probability can be expressed as (chain-rule and independance of $\textbf{f}$ and $\textbf{a}$):
 \begin{align*}
 Pr(\textbf{f},\textbf{a}|\textbf{e}) &= Pr(f_0,a_0|\textbf{e}) \prod_{j=1}^J Pr(f_j,a_j|f_{1}^{j-1},a_{1}^{j-1},\textbf{e})\\
@@ -119,7 +119,7 @@ Pr(\textbf{f},\textbf{a}|\textbf{e}) &= Pr(f_0,a_0|\textbf{e}) \prod_{j=1}^J Pr(
 &\cdot \prod_{j=1}^J Pr(f_j|f_{1}^{j-1},a_{1}^{j-1},\textbf{e}) Pr(a_j|f_{1}^{j-1},a_{1}^{j-1},\textbf{e})
 \end{align*}
 
-The HMM model reduced the generality of the previous formula by assuming first-order dependance of alignments and translation probability of French word at position $j$ to be only dependent on the English word at position $a_j$, thus yielding the HMM model:
+The HMM model reduces the generality of the previous formula by assuming first-order dependance of alignments and translation probability of French word at position $j$ to be only dependent on the English word at position $a_j$, thus yielding the HMM model:
 
 \begin{align*}
 Pr(\textbf{f},\textbf{a}|\textbf{e}) &= p(f_0|e_{a_0}) p(a_0)\\
@@ -140,25 +140,25 @@ Figure~\ref{fig:hmm_model} presents the graphical model associated with HMM-base
 The \textbf{parameters for the HMM model} are
 \begin{align*}
 \Theta &= \lbrace\\
-& p(i) &\mbox{   the initial alignment probabilities ($p(a_0)$)}\\ 
-& p(i|i',I) &\mbox{   the transition matrix}\\
+& p(i) &\mbox{   the initial alignment probabilities ($p(a_0=i)$)}\\ 
+& p(i|i',I) &\mbox{   the transition matrix ($p(a_{j+1}=i|a_{j}=i')$)}\\
 & p(f|e) &\mbox{   the emission (translation) probabilities}\rbrace
 \end{align*}
 
 A further assumption from \textit{Vogel and al.} is that alignment transition probabilities \textbf{only depend on relative positions}: $p(i|i',I) = p(i'-i|I)$
 
-Just as for the IBM models, the observations are the sequences of French words in French sentences, while the alignments (and thus the corresponding English words) act as hidden variables. A way to solve this problem is to use an \textbf{EM principle}.
-The \textbf{Expectation step} consists in computing alignment unary and binary probabilities in each sentence pair $(\textbf{f},\textbf{e})$. 
+Just as for the IBM models, the observations are the sequences of French words in French sentences, while the alignments (and thus the corresponding English words) act as hidden variables. A way to solve this problem is, again, to use an \textbf{EM principle}.
+The \textbf{Expectation step} consists in computing alignment unary and binary probabilities in \textbf{each sentence pair} $(\textbf{f},\textbf{e})$. 
 
 \begin{align*}
 \gamma_i(j) &= p(a_j=i|\textbf{f})\\
 \xi_{k,l}(j) &= p(a_j=k,a_{j+1}=l|\textbf{f})
 \end{align*}
+\vskip1ex
+This can be performed using the \textbf{Forward-Backward} algorithm.
+The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities. This step broadly consists in aggregating the $\gamma$ and $\xi$ probabilities for all $(\textbf{f},\textbf{e})$ sentence pairs, as per described in \cite{anahita}.
 
-This can be performed using the Forward-Backward algorithm.
-The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities. This step broadly consists in aggregating the $\gamma$ and $\xi$ probabilities, as per described in \cite{anahita}.
-
-The \textbf{Viterbi} algorithm is then used to retrieve the most likely alignments in the corpus, according to the computed transition and emission probabilities.
+The \textbf{Viterbi} decoding algorithm is then used to retrieve the most likely alignments in the corpus, according to the computed transition and emission probabilities.
 
 \section{Results and discussions}
 
