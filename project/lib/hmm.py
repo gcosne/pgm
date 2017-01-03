@@ -49,7 +49,7 @@ def beta_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,next_beta):
 
     result = np.zeros(I)
     for i in range(I):
-        tmp_vector = np.log(A[idx][:,i]) + next_beta
+        tmp_vector = np.log(A[idx][i,:]) + next_beta
         # for j in range(len(next_beta)):
         for ip in range(len(next_beta)):
             tmp_vector[ip] += \
@@ -97,6 +97,7 @@ def cond_proba_unary(log_alphas, log_betas):
     probas = log_alphas + log_betas
     for t in range(probas.shape[1]):
         probas[:,t] = probas[:,t] - log_sum(probas[:,t])
+        #probas[:,t] = probas[:,t] - log_sum(log_alphas[:,-1])
     probas = np.exp(probas)
     return probas
 
@@ -110,14 +111,16 @@ def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_d
         idx = i + 1
     assert idx<len(A), "index not found in A"
 
-    probas = np.zeros([log_alphas.shape[1]-1,A[idx].shape[0],A[idx].shape[1]])
-    for t in range(probas.shape[0]):
+    # probas = np.zeros([log_alphas.shape[1]-1,A[idx].shape[0],A[idx].shape[1]])
+    probas = np.zeros([log_alphas.shape[1]-1,I,I])
+    for j in range(probas.shape[0]):
         for k in range(probas.shape[1]):
             for l in range(probas.shape[2]):
-                probas[t,k,l] += log_alphas[l,t] + log_betas[k,t+1]
-                probas[t,k,l] += math.log(eps + A[idx][k,l])
-                probas[t,k,l] += log_proba_translate(fr_sentence[t],en_sentence[k],fr_dict,en_dict,P)
-                probas[t,k,l] -= log_sum(log_alphas[:,t] + log_betas[:,t])
+                probas[j,k,l] += log_alphas[l,j] + log_betas[k,j+1]
+                probas[j,k,l] += math.log(eps + A[idx][k,l])
+                probas[j,k,l] += log_proba_translate(fr_sentence[j+1],en_sentence[k],fr_dict,en_dict,P)
+                probas[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
+                #probas[j,k,l] -= log_sum(log_alphas[:,-1])
     probas = np.exp(probas)
     return probas
 
@@ -173,7 +176,8 @@ def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
         fr_words = imp.split_sentence(fr_sentence)
         en_words = imp.split_sentence(en_sentence)
-        c += count(i, ip, fr_corpus, en_corpus, fr, ksi) * (len(en_words) == I)
+        if (len(en_words) == I):
+            c += count(i, ip, fr_corpus, en_corpus, fr, ksi)
     return c
 
 # posterior count c(f,e)
@@ -188,18 +192,23 @@ def count_emission(f, e, fr_corpus, en_corpus, gamma):
         I = len(en_words)
         for i in range(I):
             for j in range(J):
-                count += gamma[fr][j,i] * (f==fr_words[j]) * (e==en_words[i])
+                if (f==fr_words[j]) and (e==en_words[i]):
+                    count += gamma[fr][j,i]
     return count
 
 def count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma):
     c_emissions = np.zeros([len(fr_dict),len(en_dict)])
-    f_idx = 0
-    for f in fr_dict:
-        e_idx = 0
-        for e in en_dict:
-            c_emissions[f_idx,e_idx] = count_emission(f, e, fr_corpus, en_corpus, gamma)
-            e_idx += 1
-        f_idx += 1
+    # f_idx = 0
+    # for f in fr_dict:
+    #     e_idx = 0
+    #     for e in en_dict:
+    #         c_emissions[f_idx,e_idx] = count_emission(f, e, fr_corpus, en_corpus, gamma)
+    #         e_idx += 1
+    #     f_idx += 1
+    # return c_emissions
+    for f in range(len(fr_dict)):
+        for e in range(len(en_dict)):
+            c_emissions[f,e] = count_emission(fr_dict[f], en_dict[e], fr_corpus, en_corpus, gamma)
     return c_emissions
 
 # p(i|ip,I)
@@ -269,12 +278,15 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     for i in range(len(A)):
         A[i] = (0.5/(lengths[i]-1))*np.ones(lengths[i])
         A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
+    # print A
 
     # init P as uniform
     P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
 
     # init P initial
     p_initial = np.ones(int(max_I)) / max_I
+
+    # print p_initial
 
     ###########################
     #### FIRST EXPECTATION ####
@@ -285,7 +297,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 50
+    max_iter = 100
     while counter < max_iter:
         counter += 1
         print "\riteration : %d" % counter,
@@ -298,6 +310,9 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
 
         # Expectation
         gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
+
+    # print A
+    # print p_initial
 
     return A, P, p_initial, gamma, ksi
 
@@ -334,6 +349,6 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
     i_best = np.argmax(log_v[:,J-1])
     a[J-1] = i_best
     for j in range(J-1,0,-1):
-        a[int(j)-1] = state[a[int(j)],int(j)]
+        a[j-1] = state[int(a[j]),j]
 
     return a # list of size J
