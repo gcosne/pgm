@@ -4,6 +4,7 @@
 %
 %--A0 beamer slide-------------------------------------------------------------
 \documentclass[final]{beamer}
+\usepackage{etex}
 \usepackage[orientation=portrait,size=a0,
             scale=1.25         % font scale factor
            ]{beamerposter}
@@ -57,11 +58,9 @@ Thomas Debarre, Matthieu Kirchmeyer, Sylvain Truong, Nicolas Zhang
 
 \section{Introduction}
 
-This project explores three methods to solve the problem of word alignments for a bilingual corpus : conventional mixtures models (IBM1, IBM2) and a first-order HMM model developped in \cite{ref1}. 
+This project explores three methods to solve the problem of word alignments for a bilingual corpus from the conventional mixtures models (IBM1, IBM2) to a first-order HMM model developped in \cite{vogel}. 
 
 The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
-% I would not say "translate" but rather understand the underlying linguistics between two languages. In our study, doing so boils down to finding most probable alignments.  
-
 
 We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\mathbf{f}^{(1)},\mathbf{e}^{(1)}), \dots , (\mathbf{f}^{(N)},\mathbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
 
@@ -70,19 +69,29 @@ We evaluated our algorithms on a small bilingual French-English dataset $\mathca
 
 \structure{Your text with scientific results or something...} 
 
-\begin{equation}
-H = \sum_{i=1}^{N} h_{D}(i) + \sum_{j>i=1}^{N} C_{ij}
+(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
 \end{equation}
 
 
-In Ref.~\cite{ref1}...
-In Refs.~\cite{ref1,ref2}...
-On webpage~\cite{web}...
-
 \subsection{IBM models}
+The IBM alignment models for statistical machine translation were introduced by IBM more than 20 years ago \cite{brown}. They are increasingly complex, starting from the basic IBM1 model to the more complex IBM6 model. In this project, we implemented the 2 first models, IBM1 and IBM2. Both these models are based on the decomposition of the joint probability of a French sentence $\mathbf{f}$ of length $I$ and its alignment $\mathbf{a}$ conditioned on the English sentence $\mathbf{e}$ of length $J$:
+\begin{equation}
+p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
+\end{equation}
+The alignment variables $\mathbf{a} = (a_1, \hdots, a_I)$ maps a French word $f_i$ in $\mathbf{f}$ to an English word $e_{a_i}$ in $\mathbf{e}$. We have $a_i \in [0, J]$, where $a_i = 0$ is the \textit{null alignment} ($f_i$ does not align to any English word in $\mathbf{e}$).
+
+ for any pair of French and English words $(f,e)$ which are part of the training dataset, the conditional probability $p(f \vert e)$. A French sentence $\mathbf{f}$ of length $I$ is represented by a string of words $\langle f_1, \ldots, f_I \rangle$. Similarly, we represent an English sentence $\mathbf{e}$ of length $J$ by a string of words $\langle e_1, \ldots, e_J \rangle$. We assume that each French word is aligned to a single English word, and we call $a_i \in [0, J]$ the alignment variable ($f_i$ is aligned with $e_{a_i}$ if $a_i > 0$ and is unaligned if $a_i = 0$). In these models, the joint probability of the French sentence and its alignment conditioned on the corresponding English sentence is:
+\begin{equation}
+p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
+\end{equation}
+Both these models assume that for a given sentence pair $(\mathbf{f}, \mathbf{e})$ ($\mathbf{e}$ being the English translation of the French sentence $\mathbf{f}$), the probability of
+
+\begin{equation}
+p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
+\end{equation}
 
 \subsubsection{IBM1}
-
+The IBM1 model 
 
 \subsubsection{IBM2}
 
@@ -226,9 +235,9 @@ Your text with scientific results or something...
 
 \begin{thebibliography}{99}
 
-\bibitem{ref1} S. Vogel, H. Ney, and C. Tillmann, HMM-based word alignment in statistical translation
+\bibitem{brown} P. Brown et al., The Mathematics of Machine Translation: Parameter Estimation, 1993
 
-\bibitem{ref2} J.~Doe, J. Smith, Other article name, \textit{Phys. Rev. Lett.}
+\bibitem{vogel} S. Vogel, H. Ney, and C. Tillmann, HMM-based word alignment in statistical translation, 1996
 
 \bibitem{web} \url{http://www.google.pl}
 

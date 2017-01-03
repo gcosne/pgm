@@ -1,6 +1,1 @@
-\beamer@endinputifotherversion {3.36pt}
-\beamer@subsubsectionintoc {0}{0}{1}{IBM1}{1}{0}{0}
-\beamer@subsubsectionintoc {0}{0}{2}{IBM2}{1}{0}{0}
-\beamer@subsubsectionintoc {0}{0}{3}{Test data}{1}{0}{0}
-\beamer@subsubsectionintoc {0}{0}{4}{Evaluation method}{1}{0}{0}
-\beamer@subsubsectionintoc {0}{0}{5}{Example results}{1}{0}{0}
+\beamer@endinputifotherversion {3.33pt}
