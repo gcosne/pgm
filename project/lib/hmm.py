@@ -72,7 +72,7 @@ def compute_all_alpha(fr_sentence,en_sentence,fr_dict,en_dict,A,P,p_initial):
     alphas = np.zeros([I,J])
     # initialization
     for i in range(I):
-        alphas[i,0] = np.log(eps + p_initial[i]) \
+        alphas[i,0] = np.log(eps + p_initial[i] / np.sum(p_initial[:I])) \
         + log_proba_translate(fr_sentence[0],en_sentence[i],fr_dict,en_dict,P)
     # log recursion
     for j in range(1,J):
@@ -96,8 +96,8 @@ def compute_all_beta(fr_sentence,en_sentence,fr_dict,en_dict,A,P):
 def cond_proba_unary(log_alphas, log_betas):
     probas = log_alphas + log_betas
     for t in range(probas.shape[1]):
-        probas[:,t] = probas[:,t] - log_sum(probas[:,t])
-        #probas[:,t] = probas[:,t] - log_sum(log_alphas[:,-1])
+        #probas[:,t] = probas[:,t] - log_sum(probas[:,t])
+        probas[:,t] = probas[:,t] - log_sum(log_alphas[:,-1])
     probas = np.exp(probas)
     return probas
 
@@ -119,8 +119,8 @@ def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_d
                 probas[j,k,l] += log_alphas[l,j] + log_betas[k,j+1]
                 probas[j,k,l] += math.log(eps + A[idx][k,l])
                 probas[j,k,l] += log_proba_translate(fr_sentence[j+1],en_sentence[k],fr_dict,en_dict,P)
-                probas[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
-                #probas[j,k,l] -= log_sum(log_alphas[:,-1])
+                #probas[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
+                probas[j,k,l] -= log_sum(log_alphas[:,-1])
     probas = np.exp(probas)
     return probas
 
