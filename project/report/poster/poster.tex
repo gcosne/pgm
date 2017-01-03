@@ -5,18 +5,20 @@
 %--A0 beamer slide-------------------------------------------------------------
 \documentclass[final]{beamer}
 \usepackage{etex}
-\usepackage[orientation=portrait,size=a0,
-            scale=1.25         % font scale factor
+\usepackage[orientation=portrait,size=a1,
+            scale=1.10        % font scale factor
            ]{beamerposter}
            
 \geometry{
-  hmargin=2.5cm, % little modification of margins
+  hmargin=2.0cm, % little modification of margins
+  vmargin=2.0cm, % little modification of margins
 }
 
 
 % MY PACKAGES
 \usepackage[export]{adjustbox}
-
+%\usepackage[demo]{graphicx}
+\usepackage{subcaption}
 
 %
 \usepackage[utf8]{inputenc}
@@ -60,7 +62,8 @@ Thomas Debarre, Matthieu Kirchmeyer, Sylvain Truong, Nicolas Zhang
 
 This project explores three methods to solve the problem of word alignments for a bilingual corpus from the conventional mixtures models (IBM1, IBM2) to a first-order HMM model developped in \cite{vogel}. 
 
-The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
+%The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
+The goal is to understand the underlying lingustic bonds that exist between two languages (French and English in all that follows). These bonds are here addressed with the problem of words alignments in foreign-languages sentence pairs.
 
 We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\textbf{f}^{(1)},\textbf{e}^{(1)}), \dots , (\textbf{f}^{(N)},\textbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
 
@@ -129,11 +132,11 @@ Pr(\textbf{f},\textbf{a}|\textbf{e}) &= p(f_0|e_{a_0}) p(a_0)\\
 %\includegraphics[width=0.99\columnwidth]{logo.png}
 \adjincludegraphics[width=0.99\columnwidth,trim={{0.03\width} {0.6\height} {0.02\width} 0},clip]{figures/hmm.pdf}
 \caption{The HMM-based alignment model}
-\label{fig:hmm}
+\label{fig:hmm_model}
 \end{figure}
 \vskip2ex
 
-Figure~\ref{fig:hmm} presents the graphical model associated with HMM-based alignment models. What can be noticed is that, in this context, each sentence pair represents a Hidden Markov Model which parameters are shared with all other sentences of the corpus.
+Figure~\ref{fig:hmm_model} presents the graphical model associated with HMM-based alignment models. What can be noticed is that, in this context, each sentence pair represents a Hidden Markov Model which parameters are shared with all other sentences of the corpus.
 The \textbf{parameters for the HMM model} are
 \begin{align*}
 \Theta &= \lbrace\\
@@ -153,39 +156,67 @@ The \textbf{Expectation step} consists in computing alignment unary and binary p
 \end{align*}
 
 This can be performed using the Forward-Backward algorithm.
-The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities.
+The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities. This step broadly consists in aggregating the $\gamma$ and $\xi$ probabilities, as per described in \cite{anahita}.
 
 The \textbf{Viterbi} algorithm is then used to retrieve the most likely alignments in the corpus, according to the computed transition and emission probabilities.
 
 \section{Results and discussions}
 
+%\subsection{Proposed evaluation method}
+%
+%\subsection{Example results}
 
-
-\subsubsection{Test data}
- 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-
-\subsubsection{Evaluation method}
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-
-\subsection{Example results}
-
-\vskip1ex
 \begin{figure}
 \centering
 %\includegraphics[width=0.99\columnwidth]{logo.png}
-\includegraphics[width=0.99\columnwidth, height=.7\columnwidth]{figures/ibm1_2.png}
+\includegraphics[width=0.85\columnwidth, height=.7\columnwidth]{figures/ibm1_2.png}
 \caption{Comparison of the IBM models 1 and 2 example }
 \label{fig:ibm}
 \end{figure}
-\vskip2ex
+\begin{figure}
+\centering
+\begin{subfigure}{.99\columnwidth}
+  \centering
+  \includegraphics[width=.99\linewidth]{figures/figures_final/sentence3.eps}
+\end{subfigure}%
 
-The above figure shows an example of the decoding results with IBM models 1 and 2 for a same sentence pair. This example illustrates the improvement of IBM2 over IBM1: the English word "the" appears twice in the English sentence, so the IBM1 does not make any distinction between them. However, IBM2 takes the position of words into account, so since the French word "la" is towards the end of the sentence, it is aligned with the second "the".
+\begin{subfigure}{.99\columnwidth}
+  \centering
+  \includegraphics[width=.99\linewidth]{figures/figures_final/sentence11.eps}
+\end{subfigure}%
+\caption{Comparison of the IBM models and HMM model }
+\label{fig:hmm}
+\end{figure}
+
+%\vskip1ex
+%\begin{figure}
+%\centering
+%%\includegraphics[width=0.99\columnwidth]{logo.png}
+%\includegraphics[width=0.99\columnwidth, height=.7\columnwidth]{figures/figures_final/sentence11.eps}
+%\caption{Comparison of the IBM models 1 and 2 example }
+%\label{fig:ibm}
+%\end{figure}
+%\vskip1ex
+%\begin{figure}
+%\centering
+%%\includegraphics[width=0.99\columnwidth]{logo.png}
+%\includegraphics[width=0.99\columnwidth, height=.7\columnwidth]{figures/figures_final/sentence8.eps}
+%\caption{Comparison of the IBM models 1 and 2 example }
+%\label{fig:ibm}
+%\end{figure}
+%\vskip1ex
+%\begin{figure}
+%\centering
+%%\includegraphics[width=0.99\columnwidth]{logo.png}
+%\includegraphics[width=0.99\columnwidth, height=.7\columnwidth]{figures/figures_final/sentence5.eps}
+%\caption{Comparison of the IBM models 1 and 2 example }
+%\label{fig:ibm}
+%\end{figure}
+%\vskip2ex
+
+Figure~\ref{fig:ibm} shows an example of the decoding results with IBM models 1 and 2 for a same sentence pair. It shows the improvement of IBM2 over IBM1: the English word "the" appears twice in the English sentence, so the IBM1 does not make any distinction between them. However, IBM2 takes the position of words into account, so since the French word "la" is towards the end of the sentence, it is aligned with the second "the".
+
+Figure~\ref{fig:hmm} shows examples of HMM-based runs. The overall straighter alignments can be interpreted as an influence of taking into account relative positions of alignments. In practice, HMM-based trainings require homogeneous number of words in the English corpus because of the conditioning on $I$ in the expression of the transition matrix, and are harder, but also longer, to train. 
 
 \section{Summary and conclusions}
 
@@ -208,6 +239,7 @@ The above figure shows an example of the decoding results with IBM models 1 and 
 
 \bibitem{dyer} C. Dyer et al., A Simple, Fast, and Effective Reparameterization of IBM Model 2, 2013
 
+\bibitem{anahita} Bigvand, A. M., Word Alignment for Statistical Machine Translation Using Hidden Markov Models, 2015
 
 \end{thebibliography}
 %--End of references-----------------------------------------------------------
