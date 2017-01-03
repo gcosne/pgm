@@ -103,7 +103,7 @@ The IBM2 model assumes that alignments of words that are around the same relativ
 \begin{equation*}
 p(a_i = j \vert i, J, I) \propto b( \vert \frac{i}{I} - \frac{j}{J} \vert) \qquad j \neq 0
 \end{equation*}
-where $b: \mathbb{R}^{+} \to [0, 1]$ is a decreasing function. The probability of the null alignment ($j=0$) is a fixed parameter $p_0$. We chose $b: t \mapsto \exp (- \lambda t)$, where $\lambda$ is a tuning parameter, as in \cite{dyer}.
+where $b: \mathbb{R}^{+} \to [0, 1]$ is a decreasing function. The probability of the null alignment ($j=0$) is a fixed parameter $p_0$. We chose $b: t \mapsto \exp (- \lambda t)$, where $\lambda$ is a tuning parameter (\cite{dyer}).
 
 The decoding of the model is still quite simple: the most likely alignment for a pair of translated sentences $(\textbf{f}, \textbf{e})$ is given by $\hat{a_i} =\underset{j}{\mathrm{argmax}} \ p(a_i = j \vert i, J, I) p(f_{i} \vert e_{j})$.
 
@@ -156,7 +156,7 @@ The \textbf{Expectation step} consists in computing alignment unary and binary p
 \end{align*}
 \vskip1ex
 This can be performed using the \textbf{Forward-Backward} algorithm.
-The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities. This step broadly consists in aggregating the $\gamma$ and $\xi$ probabilities for all $(\textbf{f},\textbf{e})$ sentence pairs, as per described in \cite{anahita}.
+The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities. This step broadly consists in aggregating the $\gamma$ and $\xi$ probabilities for all $(\textbf{f},\textbf{e})$ sentence pairs (\cite{anahita}).
 
 The \textbf{Viterbi} decoding algorithm is then used to retrieve the most likely alignments in the corpus, according to the computed transition and emission probabilities.
 
@@ -216,12 +216,11 @@ The \textbf{Viterbi} decoding algorithm is then used to retrieve the most likely
 
 Figure~\ref{fig:ibm} shows an example of the decoding results with IBM models 1 and 2 for a same sentence pair. It shows the improvement of IBM2 over IBM1: the English word "the" appears twice in the English sentence, so the IBM1 does not make any distinction between them. However, IBM2 takes the position of words into account, so since the French word "la" is towards the end of the sentence, it is aligned with the second "the".
 
-Figure~\ref{fig:hmm} shows examples of HMM-based runs. The overall straighter alignments can be interpreted as an influence of taking into account relative positions of alignments. In practice, HMM-based trainings require homogeneous number of words in the English corpus because of the conditioning on $I$ in the expression of the transition matrix, and are harder, but also longer, to train. 
+Figure~\ref{fig:hmm} shows examples of HMM-based runs. The overall straighter alignments can be interpreted as an influence of taking into account relative positions of alignments. In practice, HMM-based trainings require homogeneous number of words in the English corpus (conditioning on $I$ in the transition matrix), and are harder, but also longer, to train. 
 
-\section{Summary and conclusions}
+\section{Conclusion}
 
-
-
+We compared in this project an HMM-based approach for modelling word alignments with mixture alignment models (IBM1/2). The results produced by the HMM model produce translation probabilities comparable to the IBM1/2 models with smoother position alignments as it makes alignment probabilities dependent on the alignement position of the previous word. Futher work could involve extending the HMM alignment model by addressing empty word problem or fertility which were not taken into account in the model developped.
 
 %==============================================================================
 %==End of content==============================================================
