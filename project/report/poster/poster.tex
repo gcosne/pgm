@@ -62,78 +62,49 @@ This project explores three methods to solve the problem of word alignments for 
 
 The goal is to translate a text given in a language (French in all that follows) to another language (English) taking into account one-to-many alignments or null words; the quality of the translation relies on the quality of the word alignments.
 
-We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\mathbf{f}^{(1)},\mathbf{e}^{(1)}), \dots , (\mathbf{f}^{(N)},\mathbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
+We evaluated our algorithms on a small bilingual French-English dataset $\mathcal{D} = \{ (\textbf{f}^{(1)},\textbf{e}^{(1)}), \dots , (\textbf{f}^{(N)},\textbf{e}^{(N)})\}$ which consists of $N = 22$ French sentences composed of 4 to 10 words with their translated English equivalents. 
 
 \section{Statistical translation models}
 
-
-\structure{Your text with scientific results or something...} 
-
-(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
-\end{equation}
-
-
 \subsection{IBM models}
-The IBM alignment models for statistical machine translation were introduced by IBM more than 20 years ago \cite{brown}. They are increasingly complex, starting from the basic IBM1 model to the more complex IBM6 model. In this project, we implemented the 2 first models, IBM1 and IBM2. Both these models are based on the decomposition of the joint probability of a French sentence $\mathbf{f}$ of length $I$ and its alignment $\mathbf{a}$ conditioned on the English sentence $\mathbf{e}$ of length $J$:
-\begin{equation}
-p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
-\end{equation}
-The alignment variables $\mathbf{a} = (a_1, \hdots, a_I)$ maps a French word $f_i$ in $\mathbf{f}$ to an English word $e_{a_i}$ in $\mathbf{e}$. We have $a_i \in [0, J]$, where $a_i = 0$ is the \textit{null alignment} ($f_i$ does not align to any English word in $\mathbf{e}$).
+The IBM alignment models for statistical machine translation were introduced by IBM more than 20 years ago \cite{brown}. In this project, we implemented the 2 most basic IBM models, IBM1 and IBM2. Both these models are based on the decomposition of the joint probability of a French sentence $\textbf{f}$ of length $I$ and its alignment $\textbf{a}$ conditioned on the English sentence $\textbf{e}$ of length $J$:
+\begin{equation*}
+p(\textbf{f}, \textbf{a} \vert \textbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
+\end{equation*}
+The alignment vector $\textbf{a} = (a_1, \hdots, a_I)$ maps a French word $f_i$ in $\textbf{f}$ to an English word $e_{a_i}$ in $\textbf{e}$. We have $a_i \in [0, J]$, where $a_i = 0$ is the \textit{null alignment}.
 
- for any pair of French and English words $(f,e)$ which are part of the training dataset, the conditional probability $p(f \vert e)$. A French sentence $\mathbf{f}$ of length $I$ is represented by a string of words $\langle f_1, \ldots, f_I \rangle$. Similarly, we represent an English sentence $\mathbf{e}$ of length $J$ by a string of words $\langle e_1, \ldots, e_J \rangle$. We assume that each French word is aligned to a single English word, and we call $a_i \in [0, J]$ the alignment variable ($f_i$ is aligned with $e_{a_i}$ if $a_i > 0$ and is unaligned if $a_i = 0$). In these models, the joint probability of the French sentence and its alignment conditioned on the corresponding English sentence is:
-\begin{equation}
-p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
-\end{equation}
-Both these models assume that for a given sentence pair $(\mathbf{f}, \mathbf{e})$ ($\mathbf{e}$ being the English translation of the French sentence $\mathbf{f}$), the probability of
+The goal is to learn the probabilistic model of a French sentence given an English sentence $p_\Theta (\textbf{f} \vert \textbf{e})$, where $\Theta = \lbrace  p(f \vert e)\rbrace$ is the set of parameters of the model, $f$ and $e$ being the French and English words appearing in the training dataset.
 
-\begin{equation}
-p(\mathbf{f}, \mathbf{a} \vert \mathbf{e}) = p(I \vert J) \prod_{i=1}^I p(a_i \vert i, J, I) \cdot p(f_i \vert e_{a_i})
-\end{equation}
+To learn this model, the \textbf{EM algorithm} is used, where the alignment is the latent variable. The \textbf{Expectation step} consists in calculating $\mathbb{E}(count \langle f, e \rangle)$, the expected number of times the French word $f$ is aligned with the English word $e$. Next, the \textbf{Maximization step} updates the parameters of the model using $\hat{p}(f \vert e) \propto \mathbb{E}(count \langle f,e \rangle)$.
 
-\subsubsection{IBM1}
-The IBM1 model 
+Once the model has been trained, it can be decoded by calculating the most likely alignment $\hat{\mathbf{a}} = \underset{\mathbf{a}}{\mathrm{argmax}} \ p(\mathbf{a} \vert \mathbf{f}, \mathbf{e})$ for a pair of translated sentences $(\textbf{f}, \textbf{e})$.
+\medskip
+\begin{center}
+\structure{IBM1} 
+\end{center}
+\medskip
 
-\subsubsection{IBM2}
+The IBM1 model assumes that a word of a French sentence has an equal probability of being aligned with any word of the corresponding English sentence (including the null word), i.e. 
+\begin{equation*}
+p(a_i = j \vert i, J, I) = p(a_i = j \vert J) = \frac{1}{J + 1}
+\end{equation*}
+Therefore, IBM1 exclusively relies on lexical translation; the ordering of the words in sentence is unaccounted for. The decoding of the model is straightforward: the most likely alignment for a pair of translated sentences $(\textbf{f}, \textbf{e})$ is given by $\hat{a_i} =\underset{j}{\mathrm{argmax}} \ p(f_{i} \vert e_{j})$
 
-\vskip1ex
-\begin{table}
-\centering
-\caption{This is a table with scientific results.}
-\begin{tabular}{ccccc}
-\hline\hline
-1 & 2 & 3 & 4 & 5\\
-\hline
-aaa & bbb & ccc & ddd & eee\\
-aaaa & bbbb & cccc & dddd & eeee\\
-aaaaa & bbbbb & ccccc & ddddd & eeeee\\
-aaaaaa & bbbbbb & cccccc & dddddd & eeeeee\\
-1.000 & 2.000 & 3.000 & 4.000 & 5.000\\
-\hline\hline
-\end{tabular}
-\end{table}
-\vskip2ex
+\medskip
+\begin{center}
+\structure{IBM2} 
+\end{center}
+\medskip
 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
+The IBM2 model assumes that alignments of words that are around the same relative place in their respective sentences are more likely, i.e. 
+\begin{equation*}
+p(a_i = j \vert i, J, I) \propto b( \vert \frac{i}{I} - \frac{j}{J} \vert) \qquad j \neq 0
+\end{equation*}
+where $b: \mathbb{R}^{+} \to [0, 1]$ is a decreasing function. The probability of the null alignment ($j=0$) is a fixed parameter $p_0$. We chose $b: t \mapsto \exp (- \lambda t)$, where $\lambda$ is a tuning parameter, as in \cite{dyer}.
 
+The decoding of the model is still quite simple: the most likely alignment for a pair of translated sentences $(\textbf{f}, \textbf{e})$ is given by $\hat{a_i} =\underset{j}{\mathrm{argmax}} \ p(a_i = j \vert i, J, I) p(f_{i} \vert e_{j})$.
+
+The assumption in IBM2 is simple enough that the model is very fast to train, but it is still simplifying since it only takes into account the absolute position of words in a sentence. This is why HMM-based alignment models were introduced to account for the relative position of words.
 
 \subsection{HMM-based alignment models}
 
@@ -162,7 +133,7 @@ Pr(\textbf{f},\textbf{a}|\textbf{e}) &= p(f_0|e_{a_0}) p(a_0)\\
 \end{figure}
 \vskip2ex
 
-Figure~\ref{fig:hmm} presents the graphical model associated with HMM-based alignement models. What can be noticed is that, in this context, each sentence pair represents a Hidden Markov Model which parameters are shared with all other sentences of the corpus.
+Figure~\ref{fig:hmm} presents the graphical model associated with HMM-based alignment models. What can be noticed is that, in this context, each sentence pair represents a Hidden Markov Model which parameters are shared with all other sentences of the corpus.
 The \textbf{parameters for the HMM model} are
 \begin{align*}
 \Theta &= \lbrace\\
@@ -184,15 +155,11 @@ The \textbf{Expectation step} consists in computing alignment unary and binary p
 This can be performed using the Forward-Backward algorithm.
 The \textbf{Maximisation step} consists in re-estimating the model's parameters according to the previously computed probabilities.
 
-The \textbf{Viterbi} algorithm is then used to retrieve the most likely alignements in the corpus, according to the computed transition and emission probabilities.
+The \textbf{Viterbi} algorithm is then used to retrieve the most likely alignments in the corpus, according to the computed transition and emission probabilities.
 
 \section{Results and discussions}
 
-\subsection{The experimental setup}
 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something...
 
 \subsubsection{Test data}
  
@@ -206,19 +173,19 @@ Your text with scientific results or something...
 Your text with scientific results or something... 
 Your text with scientific results or something... 
 
+\subsection{Example results}
 
+\vskip1ex
+\begin{figure}
+\centering
+%\includegraphics[width=0.99\columnwidth]{logo.png}
+\includegraphics[width=0.99\columnwidth, height=.7\columnwidth]{figures/ibm1_2.png}
+\caption{Comparison of the IBM models 1 and 2 example }
+\label{fig:ibm}
+\end{figure}
+\vskip2ex
 
-\subsubsection{Example results}
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
-Your text with scientific results or something... 
+The above figure shows an example of the decoding results with IBM models 1 and 2 for a same sentence pair. This example illustrates the improvement of IBM2 over IBM1: the English word "the" appears twice in the English sentence, so the IBM1 does not make any distinction between them. However, IBM2 takes the position of words into account, so since the French word "la" is towards the end of the sentence, it is aligned with the second "the".
 
 \section{Summary and conclusions}
 
@@ -235,11 +202,12 @@ Your text with scientific results or something...
 
 \begin{thebibliography}{99}
 
-\bibitem{brown} P. Brown et al., The Mathematics of Machine Translation: Parameter Estimation, 1993
-
 \bibitem{vogel} S. Vogel, H. Ney, and C. Tillmann, HMM-based word alignment in statistical translation, 1996
 
-\bibitem{web} \url{http://www.google.pl}
+\bibitem{brown} P. Brown et al., The Mathematics of Machine Translation: Parameter Estimation, 1993
+
+\bibitem{dyer} C. Dyer et al., A Simple, Fast, and Effective Reparameterization of IBM Model 2, 2013
+
 
 \end{thebibliography}
 %--End of references-----------------------------------------------------------
