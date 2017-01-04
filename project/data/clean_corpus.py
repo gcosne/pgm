@@ -15,6 +15,8 @@ for line in fr_input:
     l = l.replace("»","")
     l = l.lower()
     l = re.sub(' +', ' ', l)
+    l = l.rstrip()
+    l = l + '\n'
     fr_output.write(l)
 
 for line in en_input:
@@ -22,4 +24,6 @@ for line in en_input:
     l = line.translate(translator)
     l = l.lower()
     l = re.sub(' +', ' ', l)
+    l = l.rstrip()
+    l = l + '\n'
     en_output.write(l)
