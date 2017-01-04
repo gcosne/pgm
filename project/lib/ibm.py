@@ -75,9 +75,6 @@ def IBM1(F, E, D_F, D_E):
             for j in range(P.shape[1]):
                 P[i, j] = C_align[i, j] / C_word[j]
 
-        #if (np.linalg.norm(P-P_tmp)<CONVERGENCE_CRITERIA
-        #):
-        #    break
     if counter == N_ITER_MAX:
         print("Warning, in IBM1, reached maximum number of iterations")
 
