@@ -8,15 +8,20 @@ eps = 0.0000001
 ####### EXPECTATION ########
 ############################
 
-#########################################################################################
-########### be careful the fr_sentence and en_sentence are assumed to be splitted already
-#########################################################################################
+##########################################################################################
+###### be careful the fr_sentence and en_sentence are assumed to be splitted already #####
+##########################################################################################
+
+def log_sum(log_values):
+    max_val = np.max(log_values)
+    result = max_val + math.log(np.sum(np.exp(log_values-max_val)))
+    return result
 
 def log_proba_translate(fr_word,en_word,fr_dict,en_dict,P):
     return math.log(eps + P[imp.hash(fr_dict,fr_word),imp.hash(en_dict,en_word)])
     # P is a sparse matrix, but in this method, only non-zero cells should have a contribution
 
-def alpha_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
+def alpha_rec_log(jump,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
 # need to keep track of j, index in the french sentence chain
 # A is the transition matrix and it features 3 dimensions. The first dimension is the length of the English word
     I = len(en_sentence)
@@ -48,21 +53,17 @@ def beta_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,next_beta):
     assert idx<len(A), "index not found in A"
 
     result = np.zeros(I)
-    for i in range(I):
-        tmp_vector = np.log(A[idx][i,:]) + next_beta
+    for ip in range(I):
+        tmp_vector = np.log(A[idx][:,ip]) + next_beta
         # for j in range(len(next_beta)):
-        for ip in range(len(next_beta)):
-            tmp_vector[ip] += \
+        for i in range(len(next_beta)):
+            tmp_vector[i] += \
             log_proba_translate(fr_sentence[j],\
-                en_sentence[ip],\
+                en_sentence[i],\
                 fr_dict,en_dict,P)
         result[i] = log_sum(tmp_vector)
     return result
 
-def log_sum(log_values):
-    max_val = np.max(log_values)
-    result = max_val + math.log(np.sum(np.exp(log_values-max_val)))
-    return result
 
 def compute_all_alpha(fr_sentence,en_sentence,fr_dict,en_dict,A,P,p_initial):
     # compute all logarithms of alpha messages
@@ -103,6 +104,8 @@ def cond_proba_unary(log_alphas, log_betas):
 
 def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_dict, en_dict):
     I = len(en_sentence)
+    J = len(fr_sentence)
+
     idx = 0
     # find the appropriate index in A
     for i in range(len(A)):
@@ -112,29 +115,33 @@ def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_d
     assert idx<len(A), "index not found in A"
 
     # probas = np.zeros([log_alphas.shape[1]-1,A[idx].shape[0],A[idx].shape[1]])
-    probas = np.zeros([log_alphas.shape[1]-1,I,I])
-    for j in range(probas.shape[0]):
-        for k in range(probas.shape[1]):
-            for l in range(probas.shape[2]):
-                probas[j,k,l] += log_alphas[l,j] + log_betas[k,j+1]
-                probas[j,k,l] += math.log(eps + A[idx][k,l])
-                probas[j,k,l] += log_proba_translate(fr_sentence[j+1],en_sentence[k],fr_dict,en_dict,P)
-                #probas[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
-                probas[j,k,l] -= log_sum(log_alphas[:,-1])
-    probas = np.exp(probas)
-    return probas
+    # ksi = np.zeros([log_alphas.shape[1]-1,I,I])
+    ksi = np.zeros([J-1,I,I])
+    for j in range(ksi.shape[0]):
+        for k in range(ksi.shape[1]):
+            for l in range(ksi.shape[2]):
+                ksi[j,k,l] += log_alphas[l,j] + log_betas[k,j+1]
+                ksi[j,k,l] += math.log(eps + A[idx][k,l])
+                ksi[j,k,l] += log_proba_translate(fr_sentence[j+1],en_sentence[k],fr_dict,en_dict,P)
+                #ksi[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
+                ksi[j,k,l] -= log_sum(log_alphas[:,-1])
+    ksi = np.exp(ksi)
+    return ksi
 
 def update_gamma_ksi(fr_sentence, en_sentence, fr_dict, en_dict,A,P,p_initial):
     log_alphas = compute_all_alpha(fr_sentence,en_sentence,fr_dict,en_dict,A,P,p_initial)
     log_betas = compute_all_beta(fr_sentence,en_sentence,fr_dict,en_dict,A,P)
+
     gamma = cond_proba_unary(log_alphas,log_betas)
     ksi = cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_dict, en_dict)
+
     return gamma.T, ksi
 
 ## update all alignment probabilities
 ## and compile them in arrays gamma and ksi
 def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
     n_sentences = len(fr_corpus)
+
     gamma = np.zeros(n_sentences,dtype=object)
     ksi = np.zeros(n_sentences,dtype=object)
 
@@ -153,9 +160,8 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
 ############################
 
 # c(d=i-ip)
-def count(i, ip, fr_corpus, en_corpus, idx_phrase, ksi):
+def count(d, fr_corpus, en_corpus, idx_phrase, ksi):
     c = 0
-    d = i - ip
     fr_sentence = fr_corpus[idx_phrase]
     en_sentence = en_corpus[idx_phrase]
     fr_words = imp.split_sentence(fr_sentence)
@@ -176,20 +182,49 @@ def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
         fr_words = imp.split_sentence(fr_sentence)
         en_words = imp.split_sentence(en_sentence)
+        d = i - ip # i is the alignment of j+1, ip alignment of j
         if (len(en_words) == I):
-            c += count(i, ip, fr_corpus, en_corpus, fr, ksi)
+            c += count(d, fr_corpus, en_corpus, fr, ksi)
     return c
+
+# p(i|ip,I)
+def alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi):
+    alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus, ksi) for ipp in range(I))
+    return alignment_proba
+
+# p(f|e)
+# def emission_proba(f, e, fr_corpus, en_corpus, fr_dict, gamma):
+#     emission_proba = count_emission(f, e, fr_corpus, en_corpus, gamma) / np.sum(count_emission(k, e, fr_corpus, en_corpus, gamma) for k in fr_dict)
+#     return emission_proba
+
+
+# # p(idx_phrase,i)
+# def p_initial(gamma):
+#     p_initial = gamma[:,0,:] / np.sum(gamma[:,0,:]) # doute
+#     return p_initial
+
+def p_init(gamma,max_I):
+    p_init = np.zeros(int(max_I))
+    for gam in gamma:
+        I = gam.shape[1]
+        p_init[:I] = p_init[:I] + gam[0,:]
+    #p_init = p_init / np.sum(p_init)
+    return p_init
 
 # posterior count c(f,e)
 def count_emission(f, e, fr_corpus, en_corpus, gamma):
     count = 0
     for fr in range(len(fr_corpus)):
+
         fr_sentence = fr_corpus[fr]
         en_sentence = en_corpus[fr] #fr is the index of the corresponding sentence in the english corpus
+
         fr_words = imp.split_sentence(fr_sentence)
         en_words = imp.split_sentence(en_sentence)
+
         J = len(fr_words)
         I = len(en_words)
+
         for i in range(I):
             for j in range(J):
                 if (f==fr_words[j]) and (e==en_words[i]):
@@ -211,34 +246,11 @@ def count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma):
             c_emissions[f,e] = count_emission(fr_dict[f], en_dict[e], fr_corpus, en_corpus, gamma)
     return c_emissions
 
-# p(i|ip,I)
-def alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi):
-    alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus, ksi) for ipp in range(I))
-    return alignment_proba
-
-# p(f|e)
-# def emission_proba(f, e, fr_corpus, en_corpus, fr_dict, gamma):
-#     emission_proba = count_emission(f, e, fr_corpus, en_corpus, gamma) / np.sum(count_emission(k, e, fr_corpus, en_corpus, gamma) for k in fr_dict)
-#     return emission_proba
-
 def emission_proba(f,e,fr_dict,en_dict,c_emissions):
     f_idx = imp.hash(fr_dict,f)
     e_idx = imp.hash(en_dict,e)
     emission_proba = c_emissions[f_idx,e_idx] / np.sum(c_emissions[:,e_idx])
     return emission_proba
-
-# # p(idx_phrase,i)
-# def p_initial(gamma):
-#     p_initial = gamma[:,0,:] / np.sum(gamma[:,0,:]) # doute
-#     return p_initial
-
-def p_init(gamma,max_I):
-    p_init = np.zeros(int(max_I))
-    for gam in gamma:
-        I = gam.shape[1]
-        p_init[:I] = p_init[:I] + gam[0,:]
-    p_init = p_init / np.sum(p_init)
-    return p_init
 
 # update the emission probility matrix
 # def update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma):
@@ -259,15 +271,17 @@ def update_A(A,fr_corpus, en_corpus, ksi):
                 A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
 
 def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
-    CONVERGENCE_THR = 0.01
+    CONVERGENCE_THR = 0.01 #not used at the moment
     print "Computing HMM"
     ###################
     ##### INIT ########
     ###################
+
+    # get the maximum English sentence length
+    # and the number of unique different lengths
     Is = np.zeros(len(en_corpus))
     for e in range(len(en_corpus)):
         Is[e] = len(imp.split_sentence(en_corpus[e]))
-
     # lengths of English sentences
     lengths = np.unique(Is)
     max_I = np.max(lengths)
@@ -276,8 +290,9 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     A = np.zeros(len(lengths),dtype=object)
 
     for i in range(len(A)):
-        A[i] = (0.5/(lengths[i]-1))*np.ones(lengths[i])
-        A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
+        A[i] = (1.0/lengths[i])*np.ones([lengths[i],lengths[i]])
+        # A[i] = (0.5/(lengths[i]-1))*np.ones(lengths[i])
+        # A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
     # print A
 
     # init P as uniform
@@ -297,7 +312,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 100
+    max_iter = 10
     while counter < max_iter:
         counter += 1
         print "\riteration : %d" % counter,
@@ -313,6 +328,11 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
 
     # print A
     # print p_initial
+
+    # print fr_corpus[11]
+    # print en_corpus[11]
+    # print gamma[11].shape
+    # print ksi[11].shape
 
     return A, P, p_initial, gamma, ksi
 
