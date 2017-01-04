@@ -2,7 +2,7 @@
 #### Probabilistic Graphical Models ######
 ################ Project #################
 ##########################################
-
+from __future__ import division
 import sys
 import itertools
 from cycler import cycler
@@ -116,7 +116,7 @@ def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
         alignment.append(np.argmax(likelihood))
     return alignment
 
-def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, methods, method_index, alignment_HMM, lamb=0, p_null=0, figure=plt):
+def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, methods, alignment_HMM, lamb=0, p_null=0, figure=plt):
     # idx is the index of the sentence to plot
     # x-axis : English
     # y-axis : French
@@ -155,7 +155,7 @@ def main():
     lamb = 1
     p_null = 0.1  # For IBM2
     null_word = False  # Null word for IBM models
-    n_sentences = 25  # Number of sentences in corpus
+    n_sentences = 919  # Number of sentences in corpus
     ###########################
 
     args = parseArguments()
@@ -219,7 +219,7 @@ def main():
         alignment_HMM = [0 for i in range(len(fr_corpus))]
     for k in range(len(fr_corpus)):
         print "Computing Viterbi sentence %d" % k
-        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, method_index, alignment_HMM[k], lamb, p_null)
+        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, alignment_HMM[k], lamb, p_null)
 
         #  Save plots
         plt.savefig('output/figures/sentence' + str(k) + '.eps', format='eps', dpi=1000)
