@@ -10,11 +10,14 @@ def import_corpus(path_to_corpus, n_sentences):
     corpus = np.array([])
     unique_words = np.array([])
 
-    for i in range(n_sentences):
-        line = input_file.readline()
+    counter = 0
+    for line in input_file:
+        counter += 1
         corpus = np.append(corpus, line.split('\n')[0])
         words = re.split('\'| ', line.split('\n')[0])
         unique_words = np.unique(np.append(unique_words, words))
+        if counter == n_sentences:
+            break
 
     return corpus, unique_words
 

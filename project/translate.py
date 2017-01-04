@@ -153,9 +153,9 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
 def main():
     #### PARAMETERS ####
     lamb = 1
-    p_null = .1  # For IBM2
+    p_null = 0.1  # For IBM2
     null_word = False  # Null word for IBM models
-    n_sentences = 919  # Number of sentences in corpus
+    n_sentences = 25  # Number of sentences in corpus
     ###########################
 
     args = parseArguments()
@@ -223,6 +223,7 @@ def main():
 
         #  Save plots
         plt.savefig('output/figures/sentence' + str(k) + '.eps', format='eps', dpi=1000)
+        plt.close()
 
     #plt.show()
 

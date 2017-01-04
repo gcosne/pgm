@@ -48,7 +48,7 @@ def IBM1(F, E, D_F, D_E):
 
     counter = 0
 
-    while(counter < N_ITER_MAX): # and diffP > CONVERGENCE_CRITERIA):
+    while(counter < N_ITER_MAX):  # and diffP > CONVERGENCE_CRITERIA):
         print("IBM1: Iteration %d . Norm difference of P: %d" % (counter, diffP))
         P_prev = P
         counter += 1
@@ -56,7 +56,6 @@ def IBM1(F, E, D_F, D_E):
         C_word = np.zeros((size_dictE))
 
         for n in range(N):
-
             for i in range(int(phrase_size_F[n])):
                 Z = 0
                 for j in range(int(phrase_size_E[n])):
@@ -74,7 +73,6 @@ def IBM1(F, E, D_F, D_E):
             for j in range(P.shape[1]):
                 P[i, j] = C_align[i, j] / C_word[j]
         diffP = abs(P - P_prev).max()
-        print(diffP)
 
     if counter == N_ITER_MAX:
         print("Warning, in IBM1, reached maximum number of iterations")
