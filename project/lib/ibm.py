@@ -4,7 +4,7 @@ from . import import_corpus as imp
 import math
 
 ### STATIC
-CONVERGENCE_CRITERIA = 1e-10
+CONVERGENCE_CRITERIA = 1e-2
 N_ITER_MAX = 200
 ##########
 
@@ -44,10 +44,13 @@ def IBM1(F, E, D_F, D_E):
         cpt += 1
 
     P = np.ones((size_dictF, size_dictE)) / size_dictF
+    P_prev = P + 1
 
     counter = 0
 
-    while(counter < N_ITER_MAX):
+    while(counter < N_ITER_MAX and np.linalg.norm(P_prev - P) > CONVERGENCE_CRITERIA):
+        print("IBM1: Iteration %d" % counter)
+        P_prev = P
         counter += 1
         P_tmp = P
         C_align = np.zeros((size_dictF, size_dictE))
@@ -72,9 +75,6 @@ def IBM1(F, E, D_F, D_E):
             for j in range(P.shape[1]):
                 P[i, j] = C_align[i, j] / C_word[j]
 
-        #if (np.linalg.norm(P-P_tmp)<CONVERGENCE_CRITERIA
-        #):
-        #    break
     if counter == N_ITER_MAX:
         print("Warning, in IBM1, reached maximum number of iterations")
 
@@ -144,10 +144,13 @@ def IBM2(F, E, D_F, D_E, lamb, p_null):
         cpt += 1
 
     P = np.ones((size_dictF, size_dictE)) / size_dictF
+    P_prev = P + 1
 
     counter = 0
 
-    while(counter < N_ITER_MAX):
+    while(counter < N_ITER_MAX and np.linalg.norm(P_prev - P) > CONVERGENCE_CRITERIA):
+        print("IBM2: Iteration %d" % counter)
+        P_prev = P
         counter += 1
         C_align = np.zeros((size_dictF, size_dictE))
         C_word = np.zeros((size_dictE))

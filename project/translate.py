@@ -214,6 +214,8 @@ def main():
                 a = hmm.viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx, p_initial, P3, A)
                 alignment_HMM.append(a)
 
+    if not 3 in methods:
+        alignment_HMM = [0 for i in range(len(fr_corpus))]
     for k in range(len(fr_corpus)):
         print "Computing Viterbi sentence %d" % k
         plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, method_index, alignment_HMM[k], lamb, p_null)
