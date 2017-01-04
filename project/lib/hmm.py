@@ -21,7 +21,7 @@ def log_proba_translate(fr_word,en_word,fr_dict,en_dict,P):
     return math.log(eps + P[imp.hash(fr_dict,fr_word),imp.hash(en_dict,en_word)])
     # P is a sparse matrix, but in this method, only non-zero cells should have a contribution
 
-def alpha_rec_log(jump,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
+def alpha_rec_log(j,fr_sentence,en_sentence,fr_dict,en_dict,A,P,previous_alpha):
 # need to keep track of j, index in the french sentence chain
 # A is the transition matrix and it features 3 dimensions. The first dimension is the length of the English word
     I = len(en_sentence)
@@ -208,7 +208,7 @@ def p_init(gamma,max_I):
     for gam in gamma:
         I = gam.shape[1]
         p_init[:I] = p_init[:I] + gam[0,:]
-    #p_init = p_init / np.sum(p_init)
+    p_init = p_init / np.sum(p_init)
     return p_init
 
 # posterior count c(f,e)
@@ -293,7 +293,9 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
         A[i] = (1.0/lengths[i])*np.ones([lengths[i],lengths[i]])
         # A[i] = (0.5/(lengths[i]-1))*np.ones(lengths[i])
         # A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
-    # print A
+
+    ######################################### debug !!!!
+    print A
 
     # init P as uniform
     P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
@@ -326,8 +328,10 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
         # Expectation
         gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
 
+    ######################################### debug !!!!
+    print A
     # print A
-    # print p_initial
+    print p_initial
 
     # print fr_corpus[11]
     # print en_corpus[11]
@@ -339,6 +343,55 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
 ############################
 ######### DECODING #########
 ############################
+
+def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A):
+    fr_sentence = fr_corpus[idx_phrase]
+    en_sentence = en_corpus[idx_phrase]
+    fr_words = imp.split_sentence(fr_sentence)
+    en_words = imp.split_sentence(en_sentence)
+    I = len(en_words)
+    J = len(fr_words)
+
+
+    idx = 0
+    # find the appropriate index in A
+    for i in range(len(A)):
+        if (A[i].shape[0] == I):
+            break
+        idx = i + 1
+    assert idx<len(A), "index not found in A"
+
+    # init result matrices
+    state = np.zeros((I,J))
+    a = np.zeros((J))
+    log_v = np.zeros((I, J))
+    log_p = np.log(p_initial)
+
+    # Base case
+    for i in range(I):
+        # V(i,0) = p(i) p(f_0|e_i)
+        log_v[i,0] = np.log(eps + p_initial[i] / np.sum(p_initial[:I])) + log_proba_translate(fr_words[0],en_words[i],fr_dict,en_dict,P)
+
+    # Recursion
+    for j in range(1,J):
+        for i in range(I):
+            # V(i,j) = max_ip p(i|ip,I) p(fj|ei) V(ip, j-1)
+            (log_v[i,j], alignment) = max(\
+                (np.log(eps + log_proba_translate(fr_words[j],en_words[i],fr_dict,en_dict,P)) \
+                    + np.log(eps + A[idx][i,ip])
+                    # + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) \
+                    + log_v[ip, j-1], \
+                    ip) for ip in range(I))
+
+            state[i,j] = alignment #a_j-1
+
+    # Compute the Viterbi decoding
+    i_best = np.argmax(log_v[:,J-1])
+    a[J-1] = i_best
+    for j in range(J-1,0,-1):
+        a[j-1] = state[int(a[j]),j]
+
+    return a # list of size J
 
 def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions):
     fr_sentence = fr_corpus[idx_phrase]
