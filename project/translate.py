@@ -127,9 +127,10 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
     ax = fig.add_subplot(111)
     ax.grid(True)
     plt.xlim((-0.5,len(fr_sentence)-0.5))
-    plt.xticks(range(len(fr_sentence)), unicode(fr_sentence), rotation=330)
+    fr_sentence_plot = [word.decode('ascii', 'replace') for word in fr_sentence]
+    plt.xticks(range(len(fr_sentence)), fr_sentence_plot, rotation=330)
     plt.ylim((-0.5,len(en_sentence)-0.5))
-    plt.yticks(range(len(en_sentence)), unicode(en_sentence))
+    plt.yticks(range(len(en_sentence)), en_sentence)
     legend = []
 
     for i in range(len(methods)):
@@ -154,7 +155,7 @@ def main():
     lamb = 1
     p_null = .1  # For IBM2
     null_word = False  # Null word for IBM models
-    n_sentences = 20  # Number of sentences in corpus
+    n_sentences = 919  # Number of sentences in corpus
     ###########################
 
     args = parseArguments()

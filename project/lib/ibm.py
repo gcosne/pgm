@@ -5,7 +5,7 @@ import math
 
 ### STATIC
 CONVERGENCE_CRITERIA = 1e-2
-N_ITER_MAX = 200
+N_ITER_MAX = 5
 ##########
 
 ###################
@@ -48,11 +48,10 @@ def IBM1(F, E, D_F, D_E):
 
     counter = 0
 
-    while(counter < N_ITER_MAX and diffP > CONVERGENCE_CRITERIA):
+    while(counter < N_ITER_MAX): # and diffP > CONVERGENCE_CRITERIA):
         print("IBM1: Iteration %d . Norm difference of P: %d" % (counter, diffP))
         P_prev = P
         counter += 1
-        P_tmp = P
         C_align = np.zeros((size_dictF, size_dictE))
         C_word = np.zeros((size_dictE))
 
@@ -150,7 +149,7 @@ def IBM2(F, E, D_F, D_E, lamb, p_null):
 
     counter = 0
 
-    while(counter < N_ITER_MAX and diffP > CONVERGENCE_CRITERIA):
+    while(counter < N_ITER_MAX):  # and diffP > CONVERGENCE_CRITERIA):
         print("IBM2: Iteration %d . Norm difference of P: %d" % (counter, diffP))
         P_prev = P
         counter += 1
