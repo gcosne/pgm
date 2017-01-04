@@ -127,9 +127,9 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
     ax = fig.add_subplot(111)
     ax.grid(True)
     plt.xlim((-0.5,len(fr_sentence)-0.5))
-    plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
+    plt.xticks(range(len(fr_sentence)), unicode(fr_sentence), rotation=330)
     plt.ylim((-0.5,len(en_sentence)-0.5))
-    plt.yticks(range(len(en_sentence)), en_sentence)
+    plt.yticks(range(len(en_sentence)), unicode(en_sentence))
     legend = []
 
     for i in range(len(methods)):
@@ -150,8 +150,11 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
 ##################################################
 
 def main():
-    #### OUTPUT PARAMETERS ####
-    n_sentences = 20
+    #### PARAMETERS ####
+    lamb = 1
+    p_null = .1  # For IBM2
+    null_word = False  # Null word for IBM models
+    n_sentences = 20  # Number of sentences in corpus
     ###########################
 
     args = parseArguments()
@@ -160,7 +163,8 @@ def main():
         methods = [1, 2]
     else:
         methods = args.m
-    fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all(args.french_corpus, args.english_corpus)
+    fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all(
+                    args.french_corpus, args.english_corpus, n_sentences)
 
     # Faire tourner sans arguments
     # fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all("corpus_fr.txt", "corpus_en.txt")
@@ -169,11 +173,7 @@ def main():
     print(fr_dict)
     print(en_dict)
 
-    lamb = 1
-    p_null = .1  # For IBM2
-
     ####### Null word ####################
-    null_word = False  # Null word for IBM models
 
     en_corpus_ibm = en_corpus
     if null_word:
