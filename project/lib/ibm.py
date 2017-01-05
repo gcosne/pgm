@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import re
 from . import import_corpus as imp
@@ -5,7 +6,7 @@ import math
 
 ### STATIC
 CONVERGENCE_CRITERIA = 1e-2
-N_ITER_MAX = 5
+N_ITER_MAX = 10
 ##########
 
 ###################
@@ -48,9 +49,9 @@ def IBM1(F, E, D_F, D_E):
 
     counter = 0
 
-    while(counter < N_ITER_MAX):  # and diffP > CONVERGENCE_CRITERIA):
-        print("IBM1: Iteration %d . Norm difference of P: %d" % (counter, diffP))
-        P_prev = P
+    while(counter < N_ITER_MAX and diffP > CONVERGENCE_CRITERIA):
+        print("IBM1: Iteration %d . Norm difference of P: %f" % (counter, diffP))
+        P_prev = np.copy(P)
         counter += 1
         C_align = np.zeros((size_dictF, size_dictE))
         C_word = np.zeros((size_dictE))
@@ -73,7 +74,6 @@ def IBM1(F, E, D_F, D_E):
             for j in range(P.shape[1]):
                 P[i, j] = C_align[i, j] / C_word[j]
         diffP = abs(P - P_prev).max()
-
     if counter == N_ITER_MAX:
         print("Warning, in IBM1, reached maximum number of iterations")
 
@@ -147,9 +147,9 @@ def IBM2(F, E, D_F, D_E, lamb, p_null):
 
     counter = 0
 
-    while(counter < N_ITER_MAX):  # and diffP > CONVERGENCE_CRITERIA):
-        print("IBM2: Iteration %d . Norm difference of P: %d" % (counter, diffP))
-        P_prev = P
+    while(counter < N_ITER_MAX and diffP > CONVERGENCE_CRITERIA):
+        print("IBM2: Iteration %d . Norm difference of P: %f" % (counter, diffP))
+        P_prev = np.copy(P)
         counter += 1
         C_align = np.zeros((size_dictF, size_dictE))
         C_word = np.zeros((size_dictE))
