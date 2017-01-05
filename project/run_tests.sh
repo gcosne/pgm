@@ -2,8 +2,8 @@
 
 main="translate.py"
 
-CORPUS_FR="data/corpus_fr_hom.txt"
-CORPUS_EN="data/corpus_en_hom.txt"
+CORPUS_FR="data/clean.fr"
+CORPUS_EN="data/clean.en"
 
 method="3"
 
