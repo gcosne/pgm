@@ -295,7 +295,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
         # A[i] = A[i] + (0.5 - (0.5/(lengths[i]-1)))*np.eye(lengths[i])
 
     ######################################### debug !!!!
-    print A
+    #print A
 
     # init P as uniform
     P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
@@ -314,7 +314,7 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 10
+    max_iter = 5
     while counter < max_iter:
         counter += 1
         print "\riteration : %d" % counter,
@@ -329,9 +329,9 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
         gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
 
     ######################################### debug !!!!
-    print A
+    #print A
     # print A
-    print p_initial
+    #print p_initial
 
     # print fr_corpus[11]
     # print en_corpus[11]

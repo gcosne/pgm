@@ -1,2 +1,9 @@
 # ignore all .pyc files
 *.pyc
+# latex aux files
+*poster.aux
+*poster.log
+*poster.nav
+*poster.synctex.gz
+*poster.toc
+*texput.log
