@@ -2,7 +2,7 @@
 #### Probabilistic Graphical Models ######
 ################ Project #################
 ##########################################
-
+from __future__ import division
 import sys
 import itertools
 from cycler import cycler
@@ -116,7 +116,7 @@ def most_likely_alignment(fr_sentence, en_sentence, fr_dict,
         alignment.append(np.argmax(likelihood))
     return alignment
 
-def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, methods, method_index, alignment_HMM, lamb=0, p_null=0, figure=plt):
+def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, methods, alignment_HMM, lamb=0, p_null=0, figure=plt):
     # idx is the index of the sentence to plot
     # x-axis : English
     # y-axis : French
@@ -127,7 +127,8 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
     ax = fig.add_subplot(111)
     ax.grid(True)
     plt.xlim((-0.5,len(fr_sentence)-0.5))
-    plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
+    fr_sentence_plot = [word.decode('ascii', 'replace') for word in fr_sentence]
+    plt.xticks(range(len(fr_sentence)), fr_sentence_plot, rotation=330)
     plt.ylim((-0.5,len(en_sentence)-0.5))
     plt.yticks(range(len(en_sentence)), en_sentence)
     legend = []
@@ -150,8 +151,11 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
 ##################################################
 
 def main():
-    #### OUTPUT PARAMETERS ####
-    n_sentences = 20
+    #### PARAMETERS ####
+    lamb = 1
+    p_null = 0.1  # For IBM2
+    null_word = False  # Null word for IBM models
+    n_sentences = 919  # Number of sentences in corpus
     ###########################
 
     args = parseArguments()
@@ -160,7 +164,8 @@ def main():
         methods = [1, 2]
     else:
         methods = args.m
-    fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all(args.french_corpus, args.english_corpus)
+    fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all(
+                    args.french_corpus, args.english_corpus, n_sentences)
 
     # Faire tourner sans arguments
     # fr_corpus, fr_dict, en_corpus, en_dict = imp.import_all("corpus_fr.txt", "corpus_en.txt")
@@ -169,11 +174,7 @@ def main():
     print(fr_dict)
     print(en_dict)
 
-    lamb = 1
-    p_null = .1  # For IBM2
-
     ####### Null word ####################
-    null_word = False  # Null word for IBM models
 
     en_corpus_ibm = en_corpus
     if null_word:
@@ -218,10 +219,11 @@ def main():
         alignment_HMM = [0 for i in range(len(fr_corpus))]
     for k in range(len(fr_corpus)):
         print "Computing Viterbi sentence %d" % k
-        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, method_index, alignment_HMM[k], lamb, p_null)
+        plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, alignment_HMM[k], lamb, p_null)
 
         #  Save plots
         plt.savefig('output/figures/sentence' + str(k) + '.eps', format='eps', dpi=1000)
+        plt.close()
 
     #plt.show()
 
