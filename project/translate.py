@@ -219,14 +219,16 @@ def main():
             c_emissions = hmm.count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
 
             for idx in range(len(fr_corpus)):
+                print "Computing Viterbi sentence %d" % idx
                 # a = hmm.viterbi(fr_corpus, en_corpus, idx, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions)
                 a = hmm.viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx, p_initial, P3, A)
+                print a
                 alignment_HMM.append(a)
 
     if not 3 in methods:
         alignment_HMM = [0 for i in range(len(fr_corpus))]
     for k in range(len(fr_corpus)):
-        print "Computing Viterbi sentence %d" % k
+        print "Plotting Viterbi sentence %d" % k
         plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, alignment_HMM[k], lamb, p_null)
 
         #  Save plots

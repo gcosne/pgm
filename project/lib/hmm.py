@@ -382,7 +382,6 @@ def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A
     I = len(en_words)
     J = len(fr_words)
 
-
     idx = 0
     # find the appropriate index in A
     for i in range(len(A)):
@@ -400,19 +399,13 @@ def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A
     # Base case
     for i in range(I):
         # V(i,0) = p(i) p(f_0|e_i)
-        log_v[i,0] = np.log(eps + p_initial[i] / np.sum(p_initial[:I])) + log_proba_translate(fr_words[0],en_words[i],fr_dict,en_dict,P)
+        log_v[i,0] = np.log(eps + p_initial[i]) + log_proba_translate(fr_words[0],en_words[i],fr_dict,en_dict,P)
 
     # Recursion
     for j in range(1,J):
         for i in range(I):
             # V(i,j) = max_ip p(i|ip,I) p(fj|ei) V(ip, j-1)
-            (log_v[i,j], alignment) = max(\
-                (np.log(eps + log_proba_translate(fr_words[j],en_words[i],fr_dict,en_dict,P)) \
-                    + np.log(eps + A[idx][i,ip])
-                    # + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) \
-                    + log_v[ip, j-1], \
-                    ip) for ip in range(I))
-
+            (log_v[i,j], alignment) = max((log_proba_translate(fr_words[j],en_words[i],fr_dict,en_dict,P) + log_v[ip, j-1], ip) for ip in range(I))
             state[i,j] = alignment #a_j-1
 
     # Compute the Viterbi decoding
@@ -420,9 +413,9 @@ def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A
     a[J-1] = i_best
     for j in range(J-1,0,-1):
         a[j-1] = state[int(a[j]),j]
-
     return a # list of size J
 
+"""
 def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions):
     fr_sentence = fr_corpus[idx_phrase]
     en_sentence = en_corpus[idx_phrase]
@@ -434,7 +427,6 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
     state = np.zeros((I,J))
     a = np.zeros((J))
     log_v = np.zeros((I, J))
-    log_p = np.log(p_initial)
 
     # Base case
     for i in range(I):
@@ -455,3 +447,4 @@ def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma
         a[j-1] = state[int(a[j]),j]
 
     return a # list of size J
+"""
