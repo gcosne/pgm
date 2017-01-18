@@ -58,6 +58,7 @@ figure;
 plot(AER_index_output_ibm1)
 hold on
 plot(AER_index_output_ibm2)
+legend('HMM', 'IBM2')
 title('AER index for ibm1, ibm2 & hmm outputs with different methods for calculating the P datasets')
 xlabel('k ie the number of possible alignments we fix for the P dataset')
 ylabel('AER indices')
