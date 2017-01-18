@@ -97,8 +97,8 @@ def compute_all_beta(fr_sentence,en_sentence,fr_dict,en_dict,A,P):
 def cond_proba_unary(log_alphas, log_betas):
     probas = log_alphas + log_betas
     for t in range(probas.shape[1]):
-        #probas[:,t] = probas[:,t] - log_sum(probas[:,t])
-        probas[:,t] = probas[:,t] - log_sum(log_alphas[:,-1])
+        probas[:,t] = probas[:,t] - log_sum(probas[:,t])
+        #probas[:,t] = probas[:,t] - log_sum(log_alphas[:,-1])
     probas = np.exp(probas)
     return probas
 
@@ -123,8 +123,8 @@ def cond_proba_binary(log_alphas,log_betas, A, P, fr_sentence, en_sentence, fr_d
                 ksi[j,k,l] += log_alphas[l,j] + log_betas[k,j+1]
                 ksi[j,k,l] += math.log(eps + A[idx][k,l])
                 ksi[j,k,l] += log_proba_translate(fr_sentence[j+1],en_sentence[k],fr_dict,en_dict,P)
-                #ksi[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
-                ksi[j,k,l] -= log_sum(log_alphas[:,-1])
+                ksi[j,k,l] -= log_sum(log_alphas[:,j] + log_betas[:,j])
+                #ksi[j,k,l] -= log_sum(log_alphas[:,-1])
     ksi = np.exp(ksi)
     return ksi
 
@@ -146,6 +146,8 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
     ksi = np.zeros(n_sentences,dtype=object)
 
     for t in range(n_sentences):
+        print "\rEstep: sentence %d/%d" % (t,n_sentences)
+        sys.stdout.flush()
         fr_sentence = imp.split_sentence(fr_corpus[t])
         en_sentence = imp.split_sentence(en_corpus[t])
 
@@ -153,6 +155,8 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
         gamma[t] = gam
         ksi[t] = ks
 
+    print '\n'
+    sys.stdout.flush()
     return gamma, ksi
 
 ############################
@@ -233,18 +237,33 @@ def count_emission(f, e, fr_corpus, en_corpus, gamma):
 
 def count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma):
     c_emissions = np.zeros([len(fr_dict),len(en_dict)])
-    # f_idx = 0
-    # for f in fr_dict:
-    #     e_idx = 0
-    #     for e in en_dict:
-    #         c_emissions[f_idx,e_idx] = count_emission(f, e, fr_corpus, en_corpus, gamma)
-    #         e_idx += 1
-    #     f_idx += 1
-    # return c_emissions
-    for f in range(len(fr_dict)):
-        for e in range(len(en_dict)):
-            c_emissions[f,e] = count_emission(fr_dict[f], en_dict[e], fr_corpus, en_corpus, gamma)
+
+    for k in range(len(fr_corpus)):
+        fr_words = imp.split_sentence(fr_corpus[k])
+        en_words = imp.split_sentence(en_corpus[k])
+
+        for j in range(len(fr_words)):
+            fr_idx = imp.hash(fr_dict,fr_words[j])
+            for i in range(len(en_words)):
+                en_idx = imp.hash(en_dict,en_words[i])
+                c_emissions[fr_idx,en_idx] += gamma[k][j,i]
+
     return c_emissions
+
+# def count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma):
+#     c_emissions = np.zeros([len(fr_dict),len(en_dict)])
+#     # f_idx = 0
+#     # for f in fr_dict:
+#     #     e_idx = 0
+#     #     for e in en_dict:
+#     #         c_emissions[f_idx,e_idx] = count_emission(f, e, fr_corpus, en_corpus, gamma)
+#     #         e_idx += 1
+#     #     f_idx += 1
+#     # return c_emissions
+#     for f in range(len(fr_dict)):
+#         for e in range(len(en_dict)):
+#             c_emissions[f,e] = count_emission(fr_dict[f], en_dict[e], fr_corpus, en_corpus, gamma)
+#     return c_emissions
 
 def emission_proba(f,e,fr_dict,en_dict,c_emissions):
     f_idx = imp.hash(fr_dict,f)
@@ -257,6 +276,9 @@ def emission_proba(f,e,fr_dict,en_dict,c_emissions):
 #     for f in range(P.shape[0]):
 #         for e in range(P.shape[1]):
 #             P[f,e] = emission_proba(fr_dict[f], en_dict[e], fr_corpus, en_corpus, fr_dict, gamma)
+
+
+
 def update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma):
     c_emissions = count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
     for f in range(P.shape[0]):
@@ -266,6 +288,7 @@ def update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma):
 # update the 3-dimensionnal transition matrix
 def update_A(A,fr_corpus, en_corpus, ksi):
     for I in range(A.shape[0]):
+
         for i in range(len(A[I])):
             for ip in range(len(A[I])): #A[I] should be square
                 A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
@@ -314,16 +337,19 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     ### WHILE NOT CONVERGED ###
     ###########################
     counter = 0
-    max_iter = 5
+    max_iter = 3
     while counter < max_iter:
         counter += 1
-        print "\riteration : %d" % counter,
+        print "--------------------------------------------"
+        print "EM iteration : %d\n" % counter,
         sys.stdout.flush()
 
         # Maximisation
+        print 'M step:'
         update_A(A,fr_corpus, en_corpus, ksi)
         update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma)
         p_initial = p_init(gamma,max_I)
+
 
         # Expectation
         gamma, ksi = expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial)
@@ -338,6 +364,9 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     # print gamma[11].shape
     # print ksi[11].shape
 
+    print A
+    print P
+    print p_initial
     return A, P, p_initial, gamma, ksi
 
 ############################

@@ -1,5 +1,8 @@
 # ignore all .pyc files
 *.pyc
+# ignore all output files
+project/output/
+project/output/figures/*
 # latex aux files
 *poster.aux
 *poster.log

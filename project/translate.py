@@ -205,6 +205,11 @@ def main():
             # HMM
             A, P3, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict)
 
+            print "------A-----"
+            print A
+            print "-----p_initial----"
+            print p_initial
+
             print_P_to_csv(en_dict, fr_dict, P3, "output_hmm.csv")
             P.append(P3)
 

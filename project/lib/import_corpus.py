@@ -4,7 +4,7 @@ import re
 import os
 
 
-def import_corpus(path_to_corpus, n_sentences):
+def import_corpus(path_to_corpus, n_sentences=None):
     input_file = open(path_to_corpus, 'r')
 
     corpus = np.array([])
@@ -16,7 +16,7 @@ def import_corpus(path_to_corpus, n_sentences):
         corpus = np.append(corpus, line.split('\n')[0])
         words = re.split('\'| ', line.split('\n')[0])
         unique_words = np.unique(np.append(unique_words, words))
-        if counter == n_sentences:
+        if (not (n_sentences is None)) and (counter == n_sentences):
             break
 
     return corpus, unique_words
@@ -25,7 +25,9 @@ def import_corpus(path_to_corpus, n_sentences):
 def corpus_statistics(corpus):
     n_senteces = len(corpus)
     n_words = {} # dictionnary (n_words,n_corresponding_sentences) 
+    counter = 0
     for sentence in corpus:
+        sys.stdout.flush()
         n = len(split_sentence(sentence))
         if n in n_words:
             n_words[n] += 1
