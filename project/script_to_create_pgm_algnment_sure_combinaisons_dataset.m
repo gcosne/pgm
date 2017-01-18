@@ -18,7 +18,7 @@
 %addpath('./murphy-hmm-master/HMM');
 
 %load all output files
-%output_ibm1 = csvread('C:\Users\Nicolas\Documents\Cardabel\MVA\PGM_project\pgm\project\output_ibm1.csv',1,1);
+output_ibm1 = csvread('C:\Users\Nicolas\Documents\Cardabel\MVA\PGM_project\pgm\project\output_ibm1.csv',1,1);
 output_ibm2 = csvread('C:\Users\Nicolas\Documents\Cardabel\MVA\PGM_project\pgm\project\output_ibm2.csv',1,1);
 output_hmm = csvread('C:\Users\Nicolas\Documents\Cardabel\MVA\PGM_project\pgm\project\output_hmm.csv',1,1);
 
@@ -26,7 +26,7 @@ output_hmm = csvread('C:\Users\Nicolas\Documents\Cardabel\MVA\PGM_project\pgm\pr
 
 %S using Max function for instance
 S_output_table = zeros(size(output_hmm,1),size(output_hmm,2));
-sum_matrix = (output_hmm + output_ibm2 );
+sum_matrix = (  output_hmm + output_ibm2 + output_ibm1 );
 for i=1:size(output_hmm,2)
     [M,I] = max(sum_matrix(:,i));
     S_output_table(I,i) = 1;
@@ -34,7 +34,7 @@ end
 
 
 %P using Uniform function on k largest elements only
-for k = 2:30 %decide for k, k from 1 to size(output) which is equivalent to a uniform
+for k = 2:25 %decide for k, k from 1 to size(output) which is equivalent to a uniform
 %function
 P_output_table = zeros(size(output_hmm,1),size(output_hmm,2));
 for i=1:size(output_hmm,2)
@@ -46,19 +46,21 @@ end
 
 %% BEWARE : HERE I USED THE CSV FILES NOT FROM DECODING !!!! 
 %calculate AER index
-AER_index_output_ibm1(k) = 1 - (sum(sum(abs( output_hmm - P_output_table)+abs(output_hmm - S_output_table))))/(size(output_hmm,1) + size(output_hmm,2));
+AER_index_output_ibm1(k) = 1 - (sum(sum(abs( output_ibm1 - P_output_table)+abs(output_ibm1 - S_output_table))))/(size(output_hmm,1) + size(output_hmm,2));
 AER_index_output_ibm2(k) = 1 - (sum(sum(abs( output_ibm2 - P_output_table)+abs(output_ibm2 - S_output_table))))/(size(output_hmm,1) + size(output_hmm,2));
-%AER_index_output_hmm(k) = 1 - (abs( output_hmm - P_output_table)+abs(output_hmm - S_output_table))/(size(output_ibm1,1) + size(output_ibm1,2));
+AER_index_output_hmm(k) = 1 - (sum(sum(abs( output_hmm - P_output_table)+abs(output_hmm - S_output_table))))/(size(output_ibm1,1) + size(output_ibm1,2));
 
 end
 AER_index_output_ibm1(1) = [];
 AER_index_output_ibm2(1) = [];
+AER_index_output_hmm(1) = [];
 figure;
 
 plot(AER_index_output_ibm1)
 hold on
 plot(AER_index_output_ibm2)
-legend('HMM', 'IBM2')
+plot(AER_index_output_ibm2)
+legend('IBM1', 'IBM2', 'HMM')
 title('AER index for ibm1, ibm2 & hmm outputs with different methods for calculating the P datasets')
 xlabel('k ie the number of possible alignments we fix for the P dataset')
 ylabel('AER indices')
