@@ -1,5 +1,8 @@
 # ignore all .pyc files
 *.pyc
+# mac files
+*.DS_Store
+
 # ignore all output files
 project/output/
 project/output/figures/*
