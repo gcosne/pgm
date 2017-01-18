@@ -1,5 +1,5 @@
 import numpy as np
-import import_corpus as imp
+from lib import import_corpus as imp
 import math
 import sys
 
@@ -146,7 +146,7 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
     ksi = np.zeros(n_sentences,dtype=object)
 
     for t in range(n_sentences):
-        print "\rEstep: sentence %d/%d" % (t,n_sentences)
+        print ("\rEstep: sentence %d/%d" % (t,n_sentences))
         sys.stdout.flush()
         fr_sentence = imp.split_sentence(fr_corpus[t])
         en_sentence = imp.split_sentence(en_corpus[t])
@@ -155,7 +155,7 @@ def expectation(fr_corpus,en_corpus,fr_dict,en_dict,A,P,p_initial):
         gamma[t] = gam
         ksi[t] = ks
 
-    print '\n'
+    print ('\n')
     sys.stdout.flush()
     return gamma, ksi
 
@@ -306,7 +306,7 @@ def update_A(A,fr_corpus, en_corpus, ksi):
 
 def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2):
     CONVERGENCE_THR = 0.01 #not used at the moment
-    print "Computing HMM"
+    print ("Computing HMM")
     ###################
     ##### INIT ########
     ###################
@@ -352,12 +352,12 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2):
     max_iter = 3
     while counter < max_iter:
         counter += 1
-        print "--------------------------------------------"
-        print "EM iteration : %d\n" % counter,
+        print ("--------------------------------------------")
+        print ("EM iteration : %d\n" % counter),
         sys.stdout.flush()
 
         # Maximisation
-        print 'M step:'
+        print ('M step:')
         update_A(A,fr_corpus, en_corpus, ksi)
         update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma)
         p_initial = p_init(gamma,max_I)
@@ -376,16 +376,16 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2):
     # print gamma[11].shape
     # print ksi[11].shape
 
-    print A
-    print P
-    print p_initial
+    print (A)
+    print (P)
+    print (p_initial)
     return A, P, p_initial, gamma, ksi
 
 ############################
 ######### DECODING #########
 ############################
 
-def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A):
+def viterbi(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A):
     fr_sentence = fr_corpus[idx_phrase]
     en_sentence = en_corpus[idx_phrase]
     fr_words = imp.split_sentence(fr_sentence)
@@ -425,37 +425,3 @@ def viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx_phrase, p_initial, P, A
     for j in range(J-1,0,-1):
         a[j-1] = state[int(a[j]),j]
     return a # list of size J
-
-"""
-def viterbi(fr_corpus, en_corpus, idx_phrase, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions):
-    fr_sentence = fr_corpus[idx_phrase]
-    en_sentence = en_corpus[idx_phrase]
-    fr_words = imp.split_sentence(fr_sentence)
-    en_words = imp.split_sentence(en_sentence)
-    I = len(en_words)
-    J = len(fr_words)
-
-    state = np.zeros((I,J))
-    a = np.zeros((J))
-    log_v = np.zeros((I, J))
-
-    # Base case
-    for i in range(I):
-        # V(i,0) = p(i) p(f_0|e_i)
-        log_v[i,0] = np.log(eps + p_initial[i]) + np.log(eps + emission_proba(fr_words[0],en_words[i],fr_dict,en_dict,c_emissions))
-
-    # Recursion
-    for j in range(1,J):
-        for i in range(I):
-            # V(i,j) = max_ip p(i|ip,I) p(fj|ei) V(ip, j-1)
-            (log_v[i,j], alignment) = max((np.log(eps + emission_proba(fr_words[j],en_words[i],fr_dict,en_dict,c_emissions)) + np.log(alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi)) + log_v[ip, j-1], ip) for ip in range(I))
-            state[i,j] = alignment #a_j-1
-
-    # Compute the Viterbi decoding
-    i_best = np.argmax(log_v[:,J-1])
-    a[J-1] = i_best
-    for j in range(J-1,0,-1):
-        a[j-1] = state[int(a[j]),j]
-
-    return a # list of size J
-"""

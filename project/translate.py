@@ -1,11 +1,15 @@
+# -*- coding: utf-8 -*-
+
 ##########################################
 #### Probabilistic Graphical Models ######
 ################ Project #################
 ##########################################
+
 from __future__ import division
+from __future__ import unicode_literals
 import sys
 reload(sys)
-sys.setdefaultencoding('utf8')
+sys.setdefaultencoding('utf-8')
 import itertools
 from cycler import cycler
 import numpy as np
@@ -129,8 +133,7 @@ def plot_sentence_alignment(fr_corpus, en_corpus, en_dict, fr_dict, P, idx, meth
     ax = fig.add_subplot(111)
     ax.grid(True)
     plt.xlim((-0.5,len(fr_sentence)-0.5))
-    fr_sentence_plot = [word.decode('ascii', 'replace') for word in fr_sentence]
-    plt.xticks(range(len(fr_sentence)), fr_sentence_plot, rotation=330)
+    plt.xticks(range(len(fr_sentence)), fr_sentence, rotation=330)
     plt.ylim((-0.5,len(en_sentence)-0.5))
     plt.yticks(range(len(en_sentence)), en_sentence)
     legend = []
@@ -205,15 +208,15 @@ def main():
 
         if (method_index == 3):
             # HMM
-            print "computing ibm2"
+            print ("computing ibm2")
             P2 = ibm.IBM2(fr_corpus, en_corpus_ibm, fr_dict, en_dict, lamb, p_null)
-            print "computing hmm"
+            print ("computing hmm")
             A, P3, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2)
 
-            print "------A-----"
-            print A
-            print "-----p_initial----"
-            print p_initial
+            print ("------A-----")
+            print (A)
+            print ("-----p_initial----")
+            print (p_initial)
 
             print_P_to_csv(en_dict, fr_dict, P3, "output_hmm.csv")
             P.append(P3)
@@ -221,16 +224,15 @@ def main():
             c_emissions = hmm.count_emissions(fr_dict, en_dict, fr_corpus, en_corpus, gamma)
 
             for idx in range(len(fr_corpus)):
-                print "Computing Viterbi sentence %d" % idx
-                # a = hmm.viterbi(fr_corpus, en_corpus, idx, p_initial, fr_dict, en_dict, gamma, ksi, c_emissions)
-                a = hmm.viterbi2(fr_corpus, en_corpus, fr_dict, en_dict, idx, p_initial, P3, A)
-                print a
+                print ("Computing Viterbi sentence %d" % idx)
+                a = hmm.viterbi(fr_corpus, en_corpus, fr_dict, en_dict, idx, p_initial, P3, A)
+                print (a)
                 alignment_HMM.append(a)
 
     if not 3 in methods:
         alignment_HMM = [0 for i in range(len(fr_corpus))]
     for k in range(len(fr_corpus)):
-        print "Plotting Viterbi sentence %d" % k
+        print ("Plotting Viterbi sentence %d" % k)
         plot_sentence_alignment(fr_corpus, en_corpus_ibm, en_dict, fr_dict, P, k, methods, alignment_HMM[k], lamb, p_null)
 
         #  Save plots
