@@ -191,6 +191,17 @@ def count_alignment(ip, i, I, fr_corpus, en_corpus, ksi):
             c += count(d, fr_corpus, en_corpus, fr, ksi)
     return c
 
+def alignment_array(I, fr_corpus, en_corpus, ksi):
+    result = np.zeros((I,I))
+    for i in range(I):
+        for ip in range(I):
+            result[ip,i] = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi)
+
+    return result
+
+def alignment_transition_2(i,ip,alignment_array):
+    return alignment_array[ip,i] / np.sum(alignment_array[ip,:])
+
 # p(i|ip,I)
 def alignment_transition(i, ip, I, fr_corpus, en_corpus, ksi):
     alignment_proba = count_alignment(ip, i, I, fr_corpus, en_corpus, ksi) / np.sum(count_alignment(ip, ipp, I, fr_corpus, en_corpus, ksi) for ipp in range(I))
@@ -288,10 +299,10 @@ def update_P(P,fr_corpus, en_corpus, fr_dict, en_dict, gamma):
 # update the 3-dimensionnal transition matrix
 def update_A(A,fr_corpus, en_corpus, ksi):
     for I in range(A.shape[0]):
-
+        array = alignment_array(len(A[I]),fr_corpus,en_corpus,ksi)
         for i in range(len(A[I])):
             for ip in range(len(A[I])): #A[I] should be square
-                A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
+                A[I][i,ip] = alignment_transition_2(i, ip, array)
 
 def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2):
     CONVERGENCE_THR = 0.01 #not used at the moment
