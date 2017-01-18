@@ -203,7 +203,10 @@ def main():
 
         if (method_index == 3):
             # HMM
-            A, P3, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict)
+            print "computing ibm2"
+            P2 = ibm.IBM2(fr_corpus, en_corpus_ibm, fr_dict, en_dict, lamb, p_null)
+            print "computing hmm"
+            A, P3, p_initial, gamma, ksi = hmm.EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2)
 
             print "------A-----"
             print A

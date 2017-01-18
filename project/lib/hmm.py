@@ -293,7 +293,7 @@ def update_A(A,fr_corpus, en_corpus, ksi):
             for ip in range(len(A[I])): #A[I] should be square
                 A[I][i,ip] = alignment_transition(i, ip, len(A[I]), fr_corpus, en_corpus, ksi)
 
-def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
+def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict,P2):
     CONVERGENCE_THR = 0.01 #not used at the moment
     print "Computing HMM"
     ###################
@@ -321,7 +321,8 @@ def EM_HMM(fr_corpus,fr_dict,en_corpus,en_dict):
     #print A
 
     # init P as uniform
-    P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
+    # P = np.ones((len(fr_dict), len(en_dict))) / len(fr_dict)
+    P = P2
 
     # init P initial
     p_initial = np.ones(int(max_I)) / max_I
