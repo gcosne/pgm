@@ -4,6 +4,8 @@
 ##########################################
 from __future__ import division
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import itertools
 from cycler import cycler
 import numpy as np
