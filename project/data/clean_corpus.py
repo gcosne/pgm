@@ -8,10 +8,10 @@ def split_sentence(sentence):
     return sentence_split
 
 def transform_clean(length=None):
-    fr_input = codecs.open('test.fr', 'r', 'cp1252')
-    en_input = codecs.open('test.en', 'r', 'cp1252')
-    fr_output = open('clean.fr.10', 'w')
-    en_output = open('clean.en.10', 'w')
+    fr_input = codecs.open('clean.fr.12', 'r', 'cp1252')
+    en_input = codecs.open('clean.en.12', 'r', 'cp1252')
+    fr_output = open('clean.clean.fr.12', 'w')
+    en_output = open('clean.clean.en.12', 'w')
 
     if length is None:
         for line in fr_input:
@@ -22,6 +22,7 @@ def transform_clean(length=None):
             l = l.lower()
             l = re.sub(' +', ' ', l)
             l = l.rstrip()
+            l = l.strip()
             l = l + '\n'
             fr_output.write(l)
 
@@ -31,6 +32,7 @@ def transform_clean(length=None):
             l = l.lower()
             l = re.sub(' +', ' ', l)
             l = l.rstrip()
+            l = l.strip()
             l = l + '\n'
             en_output.write(l)
 
@@ -44,6 +46,7 @@ def transform_clean(length=None):
         l = l.lower()
         l = re.sub(' +', ' ', l)
         l = l.rstrip()
+        l = l.strip()
         if (len(split_sentence(l))==length):
             l = l + '\n'
             en_output.write(l)
@@ -60,8 +63,9 @@ def transform_clean(length=None):
             l = l.lower()
             l = re.sub(' +', ' ', l)
             l = l.rstrip()
+            l = l.strip()
             l = l + '\n'
             fr_output.write(l)
 
 
-transform_clean(10)
+transform_clean()
